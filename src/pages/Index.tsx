@@ -1,16 +1,61 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useCallback } from "react";
+import { useProducts } from "@/hooks/useProducts";
+import StoreHeader from "@/components/store/StoreHeader";
+import Hero from "@/components/store/Hero";
+import FilterBar from "@/components/store/FilterBar";
+import ProductCard from "@/components/store/ProductCard";
+import CartPanel from "@/components/store/CartPanel";
+import FloatingWhatsApp from "@/components/store/FloatingWhatsApp";
+import Footer from "@/components/store/Footer";
+import type { Product } from "@/lib/seedData";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+export default function Index() {
+  const { products, loading } = useProducts();
+  const [filtered, setFiltered] = useState<Product[]>([]);
+
+  const handleFilter = useCallback((result: Product[]) => {
+    setFiltered(result);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen flex flex-col">
+      <StoreHeader />
+      <Hero />
+      <FilterBar products={products} onFilter={handleFilter} />
+
+      <main className="container mx-auto px-4 py-6 flex-1">
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-lg border border-border overflow-hidden animate-pulse">
+                <div className="aspect-square bg-muted" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 bg-muted rounded w-1/3" />
+                  <div className="h-4 bg-muted rounded w-2/3" />
+                  <div className="h-3 bg-muted rounded w-full" />
+                  <div className="h-5 bg-muted rounded w-1/2" />
+                  <div className="h-9 bg-muted rounded w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-12">
+            <span className="text-4xl mb-4 block">🔍</span>
+            <p className="text-muted-foreground text-lg">No se encontraron productos</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <Footer />
+      <CartPanel />
+      <FloatingWhatsApp />
     </div>
   );
-};
-
-const Index = PlaceholderIndex;
-
-export default Index;
+}
