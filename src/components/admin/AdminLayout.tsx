@@ -45,6 +45,7 @@ export default function AdminLayout() {
             <NavLink
               key={link.to}
               to={link.to}
+              end={link.to === "/admin/products"} // Solo match exacto para la lista de productos
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
