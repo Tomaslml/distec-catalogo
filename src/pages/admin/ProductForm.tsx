@@ -206,10 +206,8 @@ export default function ProductForm() {
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-sm font-medium text-foreground">{label}</label>
-      <div className="mt-1 [&>.input-field]:w-full [&>.input-field]:px-3 [&>.input-field]:py-2 [&>.input-field]:rounded-lg [&>.input-field]:bg-muted [&>.input-field]:border [&>.input-field]:border-border [&>.input-field]:text-sm [&>.input-field]:focus:outline-none [&>.input-field]:focus:ring-2 [&>.input-field]:focus:ring-accent">
-        {children}
-      </div>
+      <label className="text-sm font-medium text-foreground block mb-1">{label}</label>
+      {children}
       {error && <p className="text-destructive text-xs mt-1">{error}</p>}
     </div>
   );
