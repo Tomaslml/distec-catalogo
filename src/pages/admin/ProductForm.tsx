@@ -95,7 +95,7 @@ export default function ProductForm() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="input-field"
+            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             placeholder="Shampoo Hydration"
           />
         </Field>
@@ -105,7 +105,7 @@ export default function ProductForm() {
             list="brands"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            className="input-field"
+            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             placeholder="Wella Professionals"
           />
           <datalist id="brands">
@@ -121,7 +121,7 @@ export default function ProductForm() {
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="input-field"
+              className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="4500"
             />
           </Field>
@@ -130,7 +130,7 @@ export default function ProductForm() {
               type="number"
               value={discountPrice}
               onChange={(e) => setDiscountPrice(e.target.value)}
-              className="input-field"
+              className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="3600"
             />
           </Field>
@@ -146,7 +146,7 @@ export default function ProductForm() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value.slice(0, 200))}
-            className="input-field min-h-[80px] resize-none"
+            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent min-h-[80px] resize-none"
             placeholder="Descripción breve del producto..."
           />
         </Field>
@@ -155,7 +155,7 @@ export default function ProductForm() {
           <input
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            className="input-field"
+            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             placeholder="https://..."
           />
           {imageUrl && (
@@ -167,7 +167,7 @@ export default function ProductForm() {
           <input
             value={emoji}
             onChange={(e) => setEmoji(e.target.value)}
-            className="input-field w-20 text-center text-2xl"
+            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent w-20 text-center text-2xl"
           />
         </Field>
 
