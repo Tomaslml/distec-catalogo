@@ -18,7 +18,7 @@ export default function Hero() {
           Tu cabello, nuestra pasión
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Productos profesionales para vos. Envíos a todo Mendoza.
+          Productos profesionales para vos.
         </p>
         <button
           onClick={scrollToProducts}

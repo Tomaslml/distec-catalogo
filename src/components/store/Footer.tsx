@@ -9,7 +9,7 @@ export default function Footer() {
           <span>💰 Mercado Pago</span>
           <span>💵 Efectivo</span>
         </div>
-        <p className="text-sm opacity-60">📍 Mendoza, Argentina</p>
+        <p className="text-sm opacity-60">📍 Mendoza, Argentina · 🚚 Envíos a todo Mendoza</p>
         <a
           href="https://wa.me/5492616838178"
           target="_blank"
