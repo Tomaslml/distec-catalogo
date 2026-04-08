@@ -1,15 +1,17 @@
+import heroBg from "@/assets/hero-bg.jpg";
+
 export default function Hero() {
   const scrollToProducts = () => {
     document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/20 py-16 md:py-24">
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 20px, currentColor 20px, currentColor 21px)`,
-        }} />
-      </div>
+    <section className="relative overflow-hidden py-20 md:py-28">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroBg})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/50" />
       <div className="container mx-auto px-4 text-center relative z-10">
         <h2 className="font-heading text-4xl md:text-6xl font-bold text-foreground mb-4">
           Tu cabello, nuestra pasión
