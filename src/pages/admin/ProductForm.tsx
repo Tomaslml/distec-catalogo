@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, X, ImagePlus } from "lucide-react";
 
 export default function ProductForm() {
   const { id } = useParams();
@@ -82,10 +82,47 @@ export default function ProductForm() {
     }
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit for base64
+        toast.error("La imagen es muy pesada (máx 1MB)");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) {
+        toast.error("La imagen es muy pesada (máx 1MB)");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const brands = [...new Set(products.map((p) => p.brand))].sort();
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-lg mx-auto pb-10">
       <h1 className="font-heading text-2xl font-bold mb-6">
         {isEdit ? "Editar producto" : "Agregar producto"}
       </h1>
@@ -151,35 +188,78 @@ export default function ProductForm() {
           />
         </Field>
 
-        <Field label="URL de imagen">
-          <input
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            placeholder="https://..."
-          />
-          {imageUrl && (
-            <img src={imageUrl} alt="Preview" className="mt-2 w-20 h-20 rounded object-cover bg-muted" />
-          )}
+        <Field label="Imagen del producto">
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            className={`mt-1 border-2 border-dashed border-border rounded-xl p-4 transition-all cursor-pointer hover:bg-muted/50 group relative overflow-hidden flex flex-col items-center justify-center min-h-[160px] ${
+              imageUrl ? "border-accent/40 bg-accent/5" : ""
+            }`}
+          >
+            <input
+              type="file"
+              className="hidden"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+
+            {imageUrl ? (
+              <>
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="absolute inset-0 w-full h-full object-contain p-2"
+                />
+                <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="flex bg-background/80 rounded-full p-2 shadow-xl border border-border scale-90 group-hover:scale-100 transition-transform">
+                    <p className="text-xs font-semibold px-2">Cambiar imagen</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageUrl("");
+                  }}
+                  className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full shadow-lg hover:scale-110 transition-transform z-20"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <div className="text-center space-y-2 py-4">
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto text-accent group-hover:scale-110 transition-transform">
+                  <ImagePlus className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">Clic para subir o arrastrá acá</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG o WEBP (Máx 1MB)</p>
+                </div>
+              </div>
+            )}
+          </div>
         </Field>
 
-        <Field label="Emoji alternativo">
-          <input
-            value={emoji}
-            onChange={(e) => setEmoji(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent w-20 text-center text-2xl"
-          />
-        </Field>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isNew}
-            onChange={(e) => setIsNew(e.target.checked)}
-            className="w-4 h-4 rounded border-border accent-accent"
-          />
-          <span className="text-sm font-medium">Marcar como NUEVO</span>
-        </label>
+        <div className="grid grid-cols-2 gap-3 items-end">
+          <Field label="Emoji (si no hay imagen)">
+            <input
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent text-center text-xl"
+            />
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer pb-2.5">
+            <input
+              type="checkbox"
+              checked={isNew}
+              onChange={(e) => setIsNew(e.target.checked)}
+              className="w-4 h-4 rounded border-border accent-accent"
+            />
+            <span className="text-sm font-medium">Marcar como NUEVO</span>
+          </label>
+        </div>
 
         <div className="flex gap-3 pt-2">
           <button
