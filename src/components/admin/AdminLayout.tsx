@@ -34,7 +34,7 @@ export default function AdminLayout() {
         }`}
       >
         <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-heading text-xl font-bold text-accent">Panel Distec</h2>
+          <h2 className="font-heading text-xl font-bold text-accent uppercase">Panel DISTEC</h2>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 hover:bg-muted rounded">
             <X className="w-5 h-5" />
           </button>

@@ -37,7 +37,7 @@ export default function Login() {
         className="bg-card rounded-xl border border-border shadow-lg p-8 w-full max-w-sm space-y-6"
       >
         <div className="text-center">
-          <h1 className="font-heading text-3xl font-bold text-accent">Distec</h1>
+          <h1 className="font-heading text-3xl font-bold text-accent uppercase">DISTEC</h1>
           <p className="text-sm text-muted-foreground mt-1">Panel de administración</p>
         </div>
 

@@ -2,7 +2,7 @@ export default function Footer() {
   return (
     <footer className="bg-primary text-primary-foreground py-8 mt-12">
       <div className="container mx-auto px-4 text-center space-y-3">
-        <h3 className="font-heading text-2xl font-bold">Distec</h3>
+        <h3 className="font-heading text-2xl font-bold uppercase">DISTEC</h3>
         <p className="text-sm opacity-80">Tu cabello, nuestra pasión</p>
         <div className="flex items-center justify-center gap-4 text-sm opacity-70">
           <span>💳 Transferencia</span>
