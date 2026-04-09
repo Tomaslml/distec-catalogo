@@ -11,13 +11,13 @@ export default function Hero() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
-      {/* Mobile: gradiente de arriba hacia abajo | Desktop: de izquierda a derecha - Menos opacidad para ver mejor la imagen */}
-      <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-background/50 via-background/20 to-transparent" />
+      {/* Oscurecemos un poco más la imagen con un degradado negro para que resalte el texto blanco */}
+      <div className="absolute inset-0 bg-black/40 md:bg-gradient-to-r md:from-black/60 md:to-transparent" />
       <div className="container mx-auto px-4 text-center relative z-10">
-        <h2 className="font-heading text-3xl sm:text-4xl md:text-6xl font-bold text-foreground mb-4">
+        <h2 className="font-heading text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-md">
           Tu cabello, nuestra pasión
         </h2>
-        <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+        <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
           Productos profesionales para vos.
         </p>
         <button
