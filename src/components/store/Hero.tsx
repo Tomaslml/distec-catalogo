@@ -11,8 +11,8 @@ export default function Hero() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
-      {/* Mobile: gradiente de arriba hacia abajo | Desktop: de izquierda a derecha */}
-      <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
+      {/* Mobile: gradiente de arriba hacia abajo | Desktop: de izquierda a derecha - Menos opacidad para ver mejor la imagen */}
+      <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-background/50 via-background/20 to-transparent" />
       <div className="container mx-auto px-4 text-center relative z-10">
         <h2 className="font-heading text-3xl sm:text-4xl md:text-6xl font-bold text-foreground mb-4">
           Tu cabello, nuestra pasión
