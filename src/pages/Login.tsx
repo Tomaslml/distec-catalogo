@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { isFirebaseConfigured } from "@/lib/firebase";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,11 +17,6 @@ export default function Login() {
     setError("");
     if (!email || !password) {
       setError("Completá todos los campos");
-      return;
-    }
-    if (!isFirebaseConfigured) {
-      // Demo mode: accept any credentials
-      navigate("/admin");
       return;
     }
     setLoading(true);
@@ -46,11 +41,6 @@ export default function Login() {
           <p className="text-sm text-muted-foreground mt-1">Panel de administración</p>
         </div>
 
-        {!isFirebaseConfigured && (
-          <div className="bg-muted p-3 rounded-lg text-xs text-muted-foreground text-center">
-            Modo demo — ingresá cualquier dato para acceder
-          </div>
-        )}
 
         {error && (
           <p className="text-destructive text-sm text-center bg-destructive/10 p-2 rounded">{error}</p>
