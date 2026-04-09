@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { db, isFirebaseConfigured } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { defaultSettings } from "@/lib/seedData";
 
 export interface StoreSettings {
@@ -16,22 +15,30 @@ export interface StoreSettings {
   };
 }
 
+const TABLE = "settings";
+
 export function useSettings() {
   const [settings, setSettings] = useState<StoreSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
 
   const fetchSettings = async () => {
     setLoading(true);
-    if (isFirebaseConfigured) {
+    if (isSupabaseConfigured) {
       try {
-        const snap = await getDoc(doc(db, "settings", "config"));
-        if (snap.exists()) {
-          setSettings(snap.data() as StoreSettings);
-        } else {
-          await setDoc(doc(db, "settings", "config"), defaultSettings);
+        const { data, error } = await supabase
+          .from(TABLE)
+          .select("*")
+          .eq("id", "config")
+          .single();
+
+        if (data) {
+          setSettings(data.content as StoreSettings);
+        } else if (!error) {
+          await supabase.from(TABLE).insert({ id: "config", content: defaultSettings });
           setSettings(defaultSettings);
         }
-      } catch {
+      } catch (err) {
+        console.error("Supabase settings fetch error:", err);
         const stored = localStorage.getItem("distec_settings");
         setSettings(stored ? JSON.parse(stored) : defaultSettings);
       }
@@ -47,8 +54,8 @@ export function useSettings() {
   }, []);
 
   const saveSettings = async (data: StoreSettings) => {
-    if (isFirebaseConfigured) {
-      await setDoc(doc(db, "settings", "config"), data);
+    if (isSupabaseConfigured) {
+      await supabase.from(TABLE).upsert({ id: "config", content: data });
     }
     localStorage.setItem("distec_settings", JSON.stringify(data));
     setSettings(data);

@@ -1,16 +1,5 @@
 import { useState, useEffect } from "react";
-import { db, isFirebaseConfigured } from "@/lib/firebase";
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  doc,
-  Timestamp,
-  query,
-  orderBy,
-  onSnapshot,
-  getDocs,
-} from "firebase/firestore";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export interface OrderItem {
   productId: string;
@@ -33,7 +22,7 @@ export interface Order {
   createdAt: Date | any;
 }
 
-const COLLECTION = "orders";
+const TABLE = "orders";
 
 function getLocalOrders(): Order[] {
   const stored = localStorage.getItem("distec_orders");
@@ -49,30 +38,46 @@ export function useOrders() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isFirebaseConfigured) {
-      const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
-      const unsub = onSnapshot(q, (snap) => {
-        setOrders(
-          snap.docs.map((d) => ({ id: d.id, ...d.data() } as Order))
-        );
-        setLoading(false);
-      }, () => {
-        setOrders(getLocalOrders());
-        setLoading(false);
-      });
-      return unsub;
+    if (isSupabaseConfigured) {
+      fetchOrders();
+
+      // Listen for changes in real-time
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: TABLE },
+          () => fetchOrders()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setOrders(getLocalOrders());
       setLoading(false);
     }
   }, []);
 
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setOrders(data.map(d => ({
+        ...d,
+        createdAt: new Date(d.created_at)
+      } as Order)));
+    }
+    setLoading(false);
+  };
+
   const addOrder = async (order: Omit<Order, "id" | "createdAt">) => {
-    if (isFirebaseConfigured) {
-      await addDoc(collection(db, COLLECTION), {
-        ...order,
-        createdAt: Timestamp.now(),
-      });
+    if (isSupabaseConfigured) {
+      await supabase.from(TABLE).insert([order]);
     } else {
       const all = getLocalOrders();
       all.unshift({ ...order, id: `order_${Date.now()}`, createdAt: new Date().toISOString() });
@@ -82,8 +87,9 @@ export function useOrders() {
   };
 
   const updateOrderStatus = async (id: string, status: Order["status"]) => {
-    if (isFirebaseConfigured) {
-      await updateDoc(doc(db, COLLECTION, id), { status });
+    if (isSupabaseConfigured) {
+      await supabase.from(TABLE).update({ status }).eq("id", id);
+      await fetchOrders();
     } else {
       const all = getLocalOrders().map((o) =>
         o.id === id ? { ...o, status } : o
