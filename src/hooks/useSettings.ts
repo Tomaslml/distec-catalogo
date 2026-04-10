@@ -55,7 +55,8 @@ export function useSettings() {
 
   const saveSettings = async (data: StoreSettings) => {
     if (isSupabaseConfigured) {
-      await supabase.from(TABLE).upsert({ id: "config", content: data });
+      const { error } = await supabase.from(TABLE).upsert({ id: "config", content: data });
+      if (error) throw error;
     }
     localStorage.setItem("distec_settings", JSON.stringify(data));
     setSettings(data);
