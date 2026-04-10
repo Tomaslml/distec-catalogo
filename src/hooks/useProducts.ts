@@ -36,20 +36,7 @@ export function useProducts() {
         if (error) throw error;
 
         if (!data || data.length === 0) {
-          // Seed Supabase if empty
-          const toInsert = seedProducts.map(p => ({
-            name: p.name,
-            brand: p.brand,
-            price: p.price,
-            discount_price: p.discountPrice,
-            description: p.description,
-            image_url: p.imageUrl,
-            emoji: p.emoji,
-            is_new: p.isNew
-          }));
-          await supabase.from(TABLE).insert(toInsert);
-          const { data: data2 } = await supabase.from(TABLE).select("*").order("created_at", { ascending: false });
-          setProducts(formatSupabaseProducts(data2 || []));
+          setProducts([]);
         } else {
           setProducts(formatSupabaseProducts(data));
         }
