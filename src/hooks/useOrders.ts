@@ -66,7 +66,9 @@ export function useOrders() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
+    if (error) {
+      console.error("Fetch orders error:", error);
+    } else if (data) {
       setOrders(data.map(d => ({
         ...d,
         createdAt: new Date(d.created_at)
@@ -77,7 +79,16 @@ export function useOrders() {
 
   const addOrder = async (order: Omit<Order, "id" | "createdAt">) => {
     if (isSupabaseConfigured) {
-      await supabase.from(TABLE).insert([order]);
+      const { error } = await supabase.from(TABLE).insert([{
+        items: order.items,
+        subtotal: order.subtotal,
+        coupon_code: order.couponCode,
+        coupon_percent: order.couponPercent,
+        discount: order.discount,
+        total: order.total,
+        status: order.status
+      }]);
+      if (error) throw error;
     } else {
       const all = getLocalOrders();
       all.unshift({ ...order, id: `order_${Date.now()}`, createdAt: new Date().toISOString() });
@@ -88,7 +99,8 @@ export function useOrders() {
 
   const updateOrderStatus = async (id: string, status: Order["status"]) => {
     if (isSupabaseConfigured) {
-      await supabase.from(TABLE).update({ status }).eq("id", id);
+      const { error } = await supabase.from(TABLE).update({ status }).eq("id", id);
+      if (error) throw error;
       await fetchOrders();
     } else {
       const all = getLocalOrders().map((o) =>
