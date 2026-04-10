@@ -1,4 +1,5 @@
 import { useProducts } from "@/hooks/useProducts";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Pencil, Trash2, Search, Plus } from "lucide-react";
@@ -28,7 +29,14 @@ export default function AdminProducts() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-bold">Productos</h1>
+        <h1 className="font-heading text-2xl font-bold">
+          Productos
+          {isSupabaseConfigured ? (
+            <span className="ml-3 text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded-full border border-green-500/20 align-middle inline-block">Supabase Activo</span>
+          ) : (
+            <span className="ml-3 text-xs bg-yellow-500/10 text-yellow-600 px-2 py-1 rounded-full border border-yellow-500/20 align-middle inline-block">Modo Local (Sin BD)</span>
+          )}
+        </h1>
         <Link
           to="/admin/products/new"
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"

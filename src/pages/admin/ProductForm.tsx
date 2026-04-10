@@ -75,8 +75,9 @@ export default function ProductForm() {
       }
       toast.success("✓ Producto guardado correctamente");
       navigate("/admin/products");
-    } catch {
-      toast.error("Error al guardar");
+    } catch (err: any) {
+      console.error("Error saving product:", err);
+      toast.error("Error al guardar: " + (err.message || "Error desconocido"));
     } finally {
       setSaving(false);
     }

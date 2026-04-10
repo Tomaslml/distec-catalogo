@@ -84,7 +84,7 @@ export function useProducts() {
 
   const addProduct = async (product: Omit<Product, "id" | "createdAt">) => {
     if (isSupabaseConfigured) {
-      await supabase.from(TABLE).insert([{
+      const { error } = await supabase.from(TABLE).insert([{
         name: product.name,
         brand: product.brand,
         price: product.price,
@@ -94,6 +94,7 @@ export function useProducts() {
         emoji: product.emoji,
         is_new: product.isNew
       }]);
+      if (error) throw error;
     } else {
       const all = getLocalProducts();
       const newP = { ...product, id: `local_${Date.now()}`, createdAt: new Date() };
@@ -115,7 +116,8 @@ export function useProducts() {
       if (data.emoji !== undefined) updateData.emoji = data.emoji;
       if (data.isNew !== undefined) updateData.is_new = data.isNew;
 
-      await supabase.from(TABLE).update(updateData).eq("id", id);
+      const { error } = await supabase.from(TABLE).update(updateData).eq("id", id);
+      if (error) throw error;
     } else {
       const all = getLocalProducts().map((p) =>
         p.id === id ? { ...p, ...data } : p
@@ -127,7 +129,8 @@ export function useProducts() {
 
   const deleteProduct = async (id: string) => {
     if (isSupabaseConfigured) {
-      await supabase.from(TABLE).delete().eq("id", id);
+      const { error } = await supabase.from(TABLE).delete().eq("id", id);
+      if (error) throw error;
     } else {
       const all = getLocalProducts().filter((p) => p.id !== id);
       saveLocalProducts(all);
