@@ -145,7 +145,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-base truncate">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.product.brand}</p>
+                      <p className="text-xs font-bold text-muted-foreground">{item.product.brand}</p>
                       <p className="text-sm font-medium text-accent">{formatPrice(price)}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">

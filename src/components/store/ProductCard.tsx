@@ -52,7 +52,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       <div className="p-3 space-y-1.5">
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+        <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">
           {product.brand}
         </p>
         <h3 className="font-bold text-lg leading-tight text-foreground mb-1">
