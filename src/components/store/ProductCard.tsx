@@ -55,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <p className="text-xs uppercase tracking-wider text-muted-foreground">
           {product.brand}
         </p>
-        <h3 className="font-semibold text-sm leading-tight text-foreground">
+        <h3 className="font-bold text-lg leading-tight text-foreground mb-1">
           {product.name}
         </h3>
         <p className="text-xs text-muted-foreground line-clamp-2">
