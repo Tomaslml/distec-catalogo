@@ -53,19 +53,28 @@ export default function CartPanel() {
 
     const productLines = items
       .map((i) => {
-        const price = i.product.discountPrice ?? i.product.price;
-        return `- ${i.qty}x ${i.product.name} — ${formatPrice(price)}`;
+        let price = i.product.discountPrice ?? i.product.price;
+        let qty = i.qty;
+        let lineNote = "";
+
+        const isMaryBosquesPromo = i.product.brand.toLowerCase().includes("mary bosques") && i.product.price === 7499;
+        
+        if (isMaryBosquesPromo && qty >= 2) {
+          const pairs = Math.floor(qty / 2);
+          const totalDiscount = pairs * 1998;
+          const lineTotal = (price * qty) - totalDiscount;
+          const avgPrice = lineTotal / qty;
+          
+          return `- ${qty}x ${i.product.name} — ${formatPrice(avgPrice)} c/u (Promo 2x$13.000 aplicada)`;
+        }
+
+        return `- ${qty}x ${i.product.name} — ${formatPrice(price)}`;
       })
       .join("\n");
 
     let couponLine = "";
     if (couponApplied) {
       couponLine = `\n🎟️ *Cupón ${settings.couponCode} (-${settings.couponPercent}%):* -${formatPrice(couponDiscountAmount)}`;
-    }
-
-    let promoLine = "";
-    if (maryBosquesDiscount > 0) {
-      promoLine = `\n✨ *Promo Mary Bosques (2x$13.000):* -${formatPrice(maryBosquesDiscount)}`;
     }
 
     const paymentMethods = [];
@@ -79,7 +88,7 @@ export default function CartPanel() {
 
 📦 *Productos:*
 ${productLines}
-${promoLine}
+
 ──────────────────
 
 💰 *Subtotal:* ${formatPrice(subtotal)}${couponLine}
@@ -138,7 +147,16 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
           <>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {items.map((item) => {
-                const price = item.product.discountPrice ?? item.product.price;
+                let price = item.product.discountPrice ?? item.product.price;
+                const isMaryBosquesPromo = item.product.brand.toLowerCase().includes("mary bosques") && item.product.price === 7499;
+                
+                if (isMaryBosquesPromo && item.qty >= 2) {
+                  const pairs = Math.floor(item.qty / 2);
+                  const totalDiscount = pairs * 1998;
+                  const lineTotal = (price * item.qty) - totalDiscount;
+                  price = lineTotal / item.qty;
+                }
+
                 return (
                   <div key={item.product.id} className="flex gap-3 bg-card p-3 rounded-lg border border-border">
                     <div className="w-14 h-14 rounded bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -151,7 +169,10 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-base truncate">{item.product.name}</p>
                       <p className="text-xs font-bold text-muted-foreground">{item.product.brand}</p>
-                      <p className="text-sm font-medium text-accent">{formatPrice(price)}</p>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-medium text-accent">{formatPrice(price)} {isMaryBosquesPromo && item.qty >= 2 && <span className="text-[10px] text-accent animate-pulse font-bold">(PROMO)</span>}</p>
+                        {isMaryBosquesPromo && item.qty >= 2 && <p className="text-[10px] text-muted-foreground line-through">{formatPrice(item.product.price)}</p>}
+                      </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <button onClick={() => removeItem(item.product.id!)} className="text-muted-foreground hover:text-destructive">
