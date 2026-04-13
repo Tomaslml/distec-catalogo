@@ -12,16 +12,27 @@ import type { Product } from "@/lib/seedData";
 export default function Index() {
   const { products, loading } = useProducts();
   const [filtered, setFiltered] = useState<Product[]>([]);
+  const [promoOnly, setPromoOnly] = useState(false);
 
   const handleFilter = useCallback((result: Product[]) => {
     setFiltered(result);
   }, []);
 
+  const handleShowOffers = () => {
+    setPromoOnly(true);
+    document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <StoreHeader />
-      <Hero />
-      <FilterBar products={products} onFilter={handleFilter} />
+      <Hero onShowOffers={handleShowOffers} />
+      <FilterBar 
+        products={products} 
+        onFilter={handleFilter} 
+        promoOnly={promoOnly}
+        setPromoOnly={setPromoOnly}
+      />
 
       <main className="container mx-auto px-4 py-6 flex-1">
         {loading ? (

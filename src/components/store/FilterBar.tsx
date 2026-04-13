@@ -5,11 +5,12 @@ import type { Product } from "@/lib/seedData";
 interface FilterBarProps {
   products: Product[];
   onFilter: (filtered: Product[]) => void;
+  promoOnly: boolean;
+  setPromoOnly: (val: boolean) => void;
 }
 
-export default function FilterBar({ products, onFilter }: FilterBarProps) {
+export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly }: FilterBarProps) {
   const [selectedBrand, setSelectedBrand] = useState("Todas");
-  const [promoOnly, setPromoOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
