@@ -31,6 +31,7 @@ export function useProducts() {
         const { data, error } = await supabase
           .from(TABLE)
           .select("*")
+          .order("sort_order", { ascending: true })
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -61,6 +62,7 @@ export function useProducts() {
       imageUrl: d.image_url,
       emoji: d.emoji,
       isNew: d.is_new,
+      sortOrder: d.sort_order,
       createdAt: new Date(d.created_at)
     }));
   }
@@ -79,7 +81,8 @@ export function useProducts() {
         description: product.description,
         image_url: product.imageUrl,
         emoji: product.emoji,
-        is_new: product.isNew
+        is_new: product.isNew,
+        sort_order: product.sortOrder ?? 0
       }]);
       if (error) throw error;
     } else {
@@ -102,6 +105,7 @@ export function useProducts() {
       if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl;
       if (data.emoji !== undefined) updateData.emoji = data.emoji;
       if (data.isNew !== undefined) updateData.is_new = data.isNew;
+      if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder;
 
       const { error } = await supabase.from(TABLE).update(updateData).eq("id", id);
       if (error) throw error;

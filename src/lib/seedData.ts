@@ -8,6 +8,7 @@ export interface Product {
   imageUrl: string;
   emoji: string;
   isNew: boolean;
+  sortOrder: number;
   createdAt: Date;
 }
 
