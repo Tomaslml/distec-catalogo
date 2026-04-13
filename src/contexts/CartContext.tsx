@@ -14,6 +14,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   subtotal: number;
+  maryBosquesDiscount: number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 }
@@ -50,14 +51,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart = useCallback(() => setItems([]), []);
 
   const totalItems = items.reduce((sum, i) => sum + i.qty, 0);
-  const subtotal = items.reduce((sum, i) => {
+  const baseTotal = items.reduce((sum, i) => {
     const price = i.product.discountPrice ?? i.product.price;
     return sum + price * i.qty;
   }, 0);
 
+  const maryBosquesPromoCount = items.reduce((count, i) => {
+    const isMaryBosques = i.product.brand.toLowerCase().includes("mary bosques");
+    return isMaryBosques && i.product.price === 7499 ? count + i.qty : count;
+  }, 0);
+
+  const maryBosquesDiscount = Math.floor(maryBosquesPromoCount / 2) * 1998; // 14998 - 13000
+  const subtotal = baseTotal - maryBosquesDiscount;
+
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, clearCart, totalItems, subtotal, isOpen, setIsOpen }}
+      value={{ items, addItem, removeItem, updateQty, clearCart, totalItems, subtotal, maryBosquesDiscount, isOpen, setIsOpen }}
     >
       {children}
     </CartContext.Provider>

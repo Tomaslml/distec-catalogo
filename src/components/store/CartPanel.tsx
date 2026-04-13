@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 export default function CartPanel() {
-  const { items, isOpen, setIsOpen, removeItem, updateQty, subtotal, totalItems, clearCart } = useCart();
+  const { items, isOpen, setIsOpen, removeItem, updateQty, subtotal, maryBosquesDiscount, totalItems, clearCart } = useCart();
   const { settings } = useSettings();
   const { addOrder } = useOrders();
   const [couponInput, setCouponInput] = useState("");
@@ -16,8 +16,8 @@ export default function CartPanel() {
   if (!isOpen) return null;
 
   const discountPercent = couponApplied ? settings.couponPercent : 0;
-  const discountAmount = Math.round(subtotal * discountPercent / 100);
-  const total = subtotal - discountAmount;
+  const couponDiscountAmount = Math.round(subtotal * discountPercent / 100);
+  const total = subtotal - couponDiscountAmount;
 
   const formatPrice = (n: number) => "$" + n.toLocaleString("es-AR");
 
@@ -46,7 +46,7 @@ export default function CartPanel() {
       subtotal,
       couponCode: couponApplied ? settings.couponCode : null,
       couponPercent: couponApplied ? settings.couponPercent : null,
-      discount: discountAmount,
+      discount: couponDiscountAmount + maryBosquesDiscount,
       total,
       status: "Pendiente",
     });
@@ -60,7 +60,12 @@ export default function CartPanel() {
 
     let couponLine = "";
     if (couponApplied) {
-      couponLine = `\n🎟️ *Cupón ${settings.couponCode} (-${settings.couponPercent}%):* -${formatPrice(discountAmount)}`;
+      couponLine = `\n🎟️ *Cupón ${settings.couponCode} (-${settings.couponPercent}%):* -${formatPrice(couponDiscountAmount)}`;
+    }
+
+    let promoLine = "";
+    if (maryBosquesDiscount > 0) {
+      promoLine = `\n✨ *Promo Mary Bosques (2x$13.000):* -${formatPrice(maryBosquesDiscount)}`;
     }
 
     const paymentMethods = [];
@@ -74,7 +79,7 @@ export default function CartPanel() {
 
 📦 *Productos:*
 ${productLines}
-
+${promoLine}
 ──────────────────
 
 💰 *Subtotal:* ${formatPrice(subtotal)}${couponLine}
@@ -191,12 +196,18 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
+                  <span>{formatPrice(subtotal + maryBosquesDiscount)}</span>
                 </div>
+                {maryBosquesDiscount > 0 && (
+                   <div className="flex justify-between text-accent font-medium">
+                     <span>Promo Mary Bosques (2x$13.000)</span>
+                     <span>-{formatPrice(maryBosquesDiscount)}</span>
+                   </div>
+                )}
                 {couponApplied && (
                   <div className="flex justify-between text-whatsapp">
-                    <span>Descuento ({settings.couponPercent}%)</span>
-                    <span>-{formatPrice(discountAmount)}</span>
+                    <span>Descuento cupón ({settings.couponPercent}%)</span>
+                    <span>-{formatPrice(couponDiscountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-1 border-t border-border">

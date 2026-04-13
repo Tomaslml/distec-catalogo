@@ -17,9 +17,12 @@ export default function Hero() {
         <h2 className="font-heading text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-md">
           Tu cabello, nuestra pasión
         </h2>
-        <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto drop-shadow-sm">
+        <p className="text-base sm:text-lg md:text-xl text-white/90 mb-2 max-w-2xl mx-auto drop-shadow-sm">
           Productos profesionales para vos.
         </p>
+        <div className="bg-accent/90 backdrop-blur-md text-accent-foreground px-4 py-2 rounded-lg inline-block mb-8 animate-pulse shadow-xl border border-white/20">
+          <span className="font-bold text-sm md:text-lg">🔥 OFERTA MARY BOSQUES: ¡2 por $13.000! 🔥</span>
+        </div>
         <button
           onClick={scrollToProducts}
           className="bg-primary text-primary-foreground px-6 md:px-8 py-3 rounded-full font-semibold text-base md:text-lg hover:opacity-90 transition-opacity shadow-lg"

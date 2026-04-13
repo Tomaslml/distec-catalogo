@@ -57,6 +57,11 @@ export default function ProductCard({ product }: ProductCardProps) {
             −{discountPercent}% OFF
           </span>
         )}
+        {product.brand.toLowerCase().includes("mary bosques") && product.price === 7499 && (
+          <span className="absolute top-2 right-2 z-10 bg-accent text-accent-foreground text-[10px] font-black px-2 py-0.5 rounded animate-pulse shadow-sm border border-white/20 pointer-events-none">
+            2 X $13.000
+          </span>
+        )}
 
         <DialogTrigger className="text-left w-full focus:outline-none flex flex-col flex-grow">
           <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden w-full relative">

@@ -74,7 +74,7 @@ export default function FilterBar({ products, onFilter }: FilterBarProps) {
             }`}
           >
             <Tag className="w-3.5 h-3.5" />
-            Solo promociones
+            Ofertas
           </button>
           {activeFilters > 0 && (
             <span className="bg-accent text-accent-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
