@@ -51,26 +51,41 @@ export default function CartPanel() {
       status: "Pendiente",
     });
 
+    // Calculamos cuántos ítems de Mary Bosques son elegibles en total
+    const eligibleItems = items.filter(i => 
+      i.product.brand.toLowerCase().includes("mary bosques") && 
+      i.product.price >= 6000 && i.product.price <= 9000
+    );
+    const totalEligibleQty = eligibleItems.reduce((sum, i) => sum + i.qty, 0);
+    const promoUnits = Math.floor(totalEligibleQty / 2) * 2;
+    let unitsToDiscount = promoUnits;
+
     const productLines = items
       .map((i) => {
         let price = i.product.discountPrice ?? i.product.price;
         let qty = i.qty;
-        let lineNote = "";
-
-        const isMaryBosquesPromo = i.product.brand.toLowerCase().includes("mary bosques") && i.product.price === 7499;
         
-        if (isMaryBosquesPromo && qty >= 2) {
-          const pairs = Math.floor(qty / 2);
-          const totalDiscount = pairs * 1998;
-          const lineTotal = (price * qty) - totalDiscount;
-          const avgPrice = lineTotal / qty;
+        const isEligible = i.product.brand.toLowerCase().includes("mary bosques") && 
+                           i.product.price >= 6000 && i.product.price <= 9000;
+        
+        if (isEligible && unitsToDiscount > 0) {
+          const discountedInThisLine = Math.min(qty, unitsToDiscount);
+          unitsToDiscount -= discountedInThisLine;
           
+          // Calculamos el precio promedio para esta línea: 
+          // (unidades en promo * 6500 + unidades fuera de promo * precio original) / qty
+          const lineTotal = (discountedInThisLine * 6500) + ((qty - discountedInThisLine) * price);
+          const avgPrice = lineTotal / qty;
+
           return `- ${qty}x ${i.product.name} — ${formatPrice(avgPrice)} c/u (Promo 2x$13.000 aplicada)`;
         }
 
         return `- ${qty}x ${i.product.name} — ${formatPrice(price)}`;
       })
       .join("\n");
+
+    // ... (resto del mensaje de WhatsApp)
+
 
     let couponLine = "";
     if (couponApplied) {
@@ -146,34 +161,61 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
         ) : (
           <>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {items.map((item) => {
-                let price = item.product.discountPrice ?? item.product.price;
-                const isMaryBosquesPromo = item.product.brand.toLowerCase().includes("mary bosques") && item.product.price === 7499;
-                
-                if (isMaryBosquesPromo && item.qty >= 2) {
-                  const pairs = Math.floor(item.qty / 2);
-                  const totalDiscount = pairs * 1998;
-                  const lineTotal = (price * item.qty) - totalDiscount;
-                  price = lineTotal / item.qty;
-                }
+              {(() => {
+                const eligibleItemsUI = items.filter(i => 
+                  i.product.brand.toLowerCase().includes("mary bosques") && 
+                  i.product.price >= 6000 && i.product.price <= 9000
+                );
+                const totalEligibleQtyUI = eligibleItemsUI.reduce((sum, i) => sum + i.qty, 0);
+                const promoUnitsUI = Math.floor(totalEligibleQtyUI / 2) * 2;
+                let unitsToDiscountUI = promoUnitsUI;
 
-                return (
-                  <div key={item.product.id} className="flex gap-3 bg-card p-3 rounded-lg border border-border">
-                    <div className="w-14 h-14 rounded bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {item.product.imageUrl ? (
-                        <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-2xl">{item.product.emoji}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-base truncate">{item.product.name}</p>
-                      <p className="text-xs font-bold text-muted-foreground">{item.product.brand}</p>
-                      <div className="flex flex-col">
-                        <p className="text-sm font-medium text-accent">{formatPrice(price)} {isMaryBosquesPromo && item.qty >= 2 && <span className="text-[10px] text-accent animate-pulse font-bold">(PROMO)</span>}</p>
-                        {isMaryBosquesPromo && item.qty >= 2 && <p className="text-[10px] text-muted-foreground line-through">{formatPrice(item.product.price)}</p>}
+                return items.map((item) => {
+                  let price = item.product.discountPrice ?? item.product.price;
+                  const originalPrice = price;
+                  const isEligible = item.product.brand.toLowerCase().includes("mary bosques") && 
+                                     item.product.price >= 6000 && item.product.price <= 9000;
+                  
+                  let hasPromo = false;
+                  if (isEligible && unitsToDiscountUI > 0) {
+                    const discountedInThisLineUI = Math.min(item.qty, unitsToDiscountUI);
+                    unitsToDiscountUI -= discountedInThisLineUI;
+                    
+                    if (discountedInThisLineUI > 0) {
+                      const lineTotalUI = (discountedInThisLineUI * 6500) + ((item.qty - discountedInThisLineUI) * price);
+                      price = lineTotalUI / item.qty;
+                      hasPromo = true;
+                    }
+                  }
+
+                  return (
+                    <div key={item.product.id} className="flex gap-3 bg-card p-3 rounded-lg border border-border">
+                      <div className="w-14 h-14 rounded bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {item.product.imageUrl ? (
+                          <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">{item.product.emoji}</span>
+                        )}
                       </div>
-                    </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-base truncate">{item.product.name}</p>
+                        <p className="text-xs font-bold text-muted-foreground">{item.product.brand}</p>
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium text-accent">
+                            {formatPrice(price)} 
+                            {hasPromo && <span className="text-[10px] text-accent animate-pulse font-bold ml-1">(PROMO)</span>}
+                          </p>
+                          {hasPromo && price < originalPrice && (
+                            <p className="text-[10px] text-muted-foreground line-through">
+                              {formatPrice(originalPrice)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                  );
+                });
+              })()}
+            </div>
                     <div className="flex flex-col items-end gap-1">
                       <button onClick={() => removeItem(item.product.id!)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-4 h-4" />

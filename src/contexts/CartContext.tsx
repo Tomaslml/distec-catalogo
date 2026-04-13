@@ -56,12 +56,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return sum + price * i.qty;
   }, 0);
 
-  const maryBosquesPromoCount = items.reduce((count, i) => {
+  const eligibleMaryBosquesPrices: number[] = [];
+  items.forEach((i) => {
     const isMaryBosques = i.product.brand.toLowerCase().includes("mary bosques");
-    return isMaryBosques && i.product.price === 7499 ? count + i.qty : count;
-  }, 0);
+    // Tomamos como elegibles los productos que estén en el rango de precio mencionado (~7499)
+    // O simplemente cualquier Mary Bosques que el usuario esté intentando sumar.
+    // Usaremos un rango amplio para capturar los de 7000, 7500, etc.
+    if (isMaryBosques && i.product.price >= 6000 && i.product.price <= 9000) {
+      for (let n = 0; n < i.qty; n++) {
+        eligibleMaryBosquesPrices.push(i.product.discountPrice ?? i.product.price);
+      }
+    }
+  });
 
-  const maryBosquesDiscount = Math.floor(maryBosquesPromoCount / 2) * 1998; // 14998 - 13000
+  // Ordenamos de mayor a menor para emparejar consistentemente
+  eligibleMaryBosquesPrices.sort((a, b) => b - a);
+
+  let maryBosquesDiscount = 0;
+  for (let i = 0; i + 1 < eligibleMaryBosquesPrices.length; i += 2) {
+    const pairSum = eligibleMaryBosquesPrices[i] + eligibleMaryBosquesPrices[i + 1];
+    maryBosquesDiscount += (pairSum - 13000);
+  }
+
   const subtotal = baseTotal - maryBosquesDiscount;
 
   return (
