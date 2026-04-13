@@ -51,9 +51,9 @@ export default function CartPanel() {
       status: "Pendiente",
     });
 
-    // Calculamos cuántos ítems de Mary Bosques son elegibles en total
+    // Calculamos cuntos tms de Mary Bosques son elegibles en total
     const eligibleItems = items.filter(i => 
-      i.product.brand.toLowerCase().includes("mary bosques")
+      /mary\s+bosques/i.test(i.product.brand)
     );
     const totalEligibleQty = eligibleItems.reduce((sum, i) => sum + i.qty, 0);
     const promoUnits = Math.floor(totalEligibleQty / 2) * 2;
@@ -64,7 +64,7 @@ export default function CartPanel() {
         let price = i.product.discountPrice ?? i.product.price;
         let qty = i.qty;
         
-        const isEligible = i.product.brand.toLowerCase().includes("mary bosques");
+        const isEligible = /mary\s+bosques/i.test(i.product.brand);
         
         if (isEligible && unitsToDiscount > 0) {
           const discountedInThisLine = Math.min(qty, unitsToDiscount);
@@ -164,7 +164,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {(() => {
                 const eligibleItemsUI = items.filter(i => 
-                  i.product.brand.toLowerCase().includes("mary bosques")
+                  /mary\s+bosques/i.test(i.product.brand)
                 );
                 const totalEligibleQtyUI = eligibleItemsUI.reduce((sum, i) => sum + i.qty, 0);
                 const promoUnitsUI = Math.floor(totalEligibleQtyUI / 2) * 2;
@@ -173,7 +173,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
                 return items.map((item) => {
                   let price = item.product.discountPrice ?? item.product.price;
                   const originalPrice = price;
-                  const isEligible = item.product.brand.toLowerCase().includes("mary bosques");
+                  const isEligible = /mary\s+bosques/i.test(item.product.brand);
                   
                   let hasPromo = false;
                   if (isEligible && unitsToDiscountUI > 0) {

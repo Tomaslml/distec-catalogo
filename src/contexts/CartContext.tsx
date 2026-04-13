@@ -58,7 +58,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const eligibleMaryBosquesPrices: number[] = [];
   items.forEach((i) => {
-    const isMaryBosques = i.product.brand.toLowerCase().includes("mary bosques");
+    const brand = i.product.brand.toLowerCase().trim();
+    // Regex flexible para capturar "Mary Bosques" con cualquier espacio o variacin de espacios
+    const isMaryBosques = /mary\s+bosques/i.test(brand);
+    
     if (isMaryBosques) {
       for (let n = 0; n < i.qty; n++) {
         eligibleMaryBosquesPrices.push(i.product.discountPrice ?? i.product.price);

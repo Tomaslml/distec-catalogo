@@ -57,7 +57,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             −{discountPercent}% OFF
           </span>
         )}
-        {product.brand.toLowerCase().includes("mary bosques") && (
+        {/mary\s+bosques/i.test(product.brand) && (
           <span className="absolute top-2 right-2 z-10 bg-accent text-accent-foreground text-[10px] font-black px-2 py-0.5 rounded animate-pulse shadow-sm border border-white/20 pointer-events-none">
             2 X $13.000
           </span>

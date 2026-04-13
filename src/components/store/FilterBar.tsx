@@ -33,7 +33,7 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
       result = result.filter(
         (p) => 
           p.discountPrice !== null || 
-          p.brand.toLowerCase().includes("mary bosques")
+          /mary\s+bosques/i.test(p.brand)
       );
     }
     if (debouncedSearch) {
