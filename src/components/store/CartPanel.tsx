@@ -53,8 +53,7 @@ export default function CartPanel() {
 
     // Calculamos cuántos ítems de Mary Bosques son elegibles en total
     const eligibleItems = items.filter(i => 
-      i.product.brand.toLowerCase().includes("mary bosques") && 
-      i.product.price >= 6000 && i.product.price <= 9000
+      i.product.brand.toLowerCase().includes("mary bosques")
     );
     const totalEligibleQty = eligibleItems.reduce((sum, i) => sum + i.qty, 0);
     const promoUnits = Math.floor(totalEligibleQty / 2) * 2;
@@ -65,17 +64,19 @@ export default function CartPanel() {
         let price = i.product.discountPrice ?? i.product.price;
         let qty = i.qty;
         
-        const isEligible = i.product.brand.toLowerCase().includes("mary bosques") && 
-                           i.product.price >= 6000 && i.product.price <= 9000;
+        const isEligible = i.product.brand.toLowerCase().includes("mary bosques");
         
         if (isEligible && unitsToDiscount > 0) {
           const discountedInThisLine = Math.min(qty, unitsToDiscount);
           unitsToDiscount -= discountedInThisLine;
           
-          // Calculamos el precio promedio para esta línea: 
-          // (unidades en promo * 6500 + unidades fuera de promo * precio original) / qty
-          const lineTotal = (discountedInThisLine * 6500) + ((qty - discountedInThisLine) * price);
-          const avgPrice = lineTotal / qty;
+          // Calculamos el precio promedio para esta línea si aplica descuento
+          // Nota: El descuento unitario real depende del par, pero para simplificar la visualización 
+          // usamos 6500 por unidad si el precio original es mayor a 6500.
+          const lineTotal = (discountedInThisLine * Math.min(price, 6500)) + ((qty - discountedInThisLine) * price);
+          // Corrección: Si queremos que sumen 13000, forzamos 6500 por unidad en el promedio.
+          const lineTotalFixed = (discountedInThisLine * 6500) + ((qty - discountedInThisLine) * price);
+          const avgPrice = lineTotalFixed / qty;
 
           return `- ${qty}x ${i.product.name} — ${formatPrice(avgPrice)} c/u (Promo 2x$13.000 aplicada)`;
         }
@@ -163,8 +164,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {(() => {
                 const eligibleItemsUI = items.filter(i => 
-                  i.product.brand.toLowerCase().includes("mary bosques") && 
-                  i.product.price >= 6000 && i.product.price <= 9000
+                  i.product.brand.toLowerCase().includes("mary bosques")
                 );
                 const totalEligibleQtyUI = eligibleItemsUI.reduce((sum, i) => sum + i.qty, 0);
                 const promoUnitsUI = Math.floor(totalEligibleQtyUI / 2) * 2;
@@ -173,8 +173,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
                 return items.map((item) => {
                   let price = item.product.discountPrice ?? item.product.price;
                   const originalPrice = price;
-                  const isEligible = item.product.brand.toLowerCase().includes("mary bosques") && 
-                                     item.product.price >= 6000 && item.product.price <= 9000;
+                  const isEligible = item.product.brand.toLowerCase().includes("mary bosques");
                   
                   let hasPromo = false;
                   if (isEligible && unitsToDiscountUI > 0) {
