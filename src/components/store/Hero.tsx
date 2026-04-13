@@ -26,7 +26,7 @@ export default function Hero({ onShowOffers }: HeroProps) {
           className="bg-accent/90 backdrop-blur-md text-accent-foreground px-6 py-3 rounded-xl animate-pulse shadow-2xl border border-white/20 hover:scale-105 transition-transform group cursor-pointer"
         >
           <span className="font-bold text-lg md:text-2xl block group-hover:scale-110 transition-transform">
-            🔥 OFERTA MARY BOSQUES 🔥
+            ⚡ OFERTA LIMITADA MARY BOSQUES ⚡
           </span>
           <span className="font-black text-xl md:text-3xl block mt-1">
             ¡2 por $13.000!

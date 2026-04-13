@@ -60,7 +60,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   items.forEach((i) => {
     const brand = i.product.brand.toLowerCase().trim();
     // Regex flexible para capturar "Mary Bosques" con cualquier espacio o variacin de espacios
-    const isMaryBosques = /mary\s+bosques/i.test(brand);
+    const isMaryBosques = /bosque/i.test(i.product.brand);
     
     if (isMaryBosques) {
       for (let n = 0; n < i.qty; n++) {
