@@ -56,33 +56,35 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
   return (
     <div id="productos" className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border py-3">
       <div className="container mx-auto px-4 space-y-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-2 pb-1">
+          <button
+            onClick={() => setPromoOnly(!promoOnly)}
+            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 shadow-sm border ${
+              promoOnly
+                ? "bg-accent text-accent-foreground border-accent"
+                : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+            Ofertas
+          </button>
+
           {brands.map((brand) => (
             <button
               key={brand}
               onClick={() => setSelectedBrand(brand)}
-              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm border ${
                 selectedBrand === brand
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
               }`}
             >
               {brand}
             </button>
           ))}
-          <button
-            onClick={() => setPromoOnly(!promoOnly)}
-            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
-              promoOnly
-                ? "bg-accent text-accent-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            <Tag className="w-3.5 h-3.5" />
-            Ofertas
-          </button>
+          
           {activeFilters > 0 && (
-            <span className="bg-accent text-accent-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0">
+            <span className="bg-accent text-accent-foreground text-xs font-bold rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center flex-shrink-0 animate-in zoom-in">
               {activeFilters}
             </span>
           )}
