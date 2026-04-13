@@ -70,11 +70,6 @@ export default function CartPanel() {
           const discountedInThisLine = Math.min(qty, unitsToDiscount);
           unitsToDiscount -= discountedInThisLine;
           
-          // Calculamos el precio promedio para esta línea si aplica descuento
-          // Nota: El descuento unitario real depende del par, pero para simplificar la visualización 
-          // usamos 6500 por unidad si el precio original es mayor a 6500.
-          const lineTotal = (discountedInThisLine * Math.min(price, 6500)) + ((qty - discountedInThisLine) * price);
-          // Corrección: Si queremos que sumen 13000, forzamos 6500 por unidad en el promedio.
           const lineTotalFixed = (discountedInThisLine * 6500) + ((qty - discountedInThisLine) * price);
           const avgPrice = lineTotalFixed / qty;
 
@@ -84,9 +79,6 @@ export default function CartPanel() {
         return `- ${qty}x ${i.product.name} — ${formatPrice(price)}`;
       })
       .join("\n");
-
-    // ... (resto del mensaje de WhatsApp)
-
 
     let couponLine = "";
     if (couponApplied) {
@@ -163,9 +155,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
           <>
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {(() => {
-                const eligibleItemsUI = items.filter(i => 
-                  /bosque/i.test(i.product.brand)
-                );
+                const eligibleItemsUI = items.filter(i => /bosque/i.test(i.product.brand));
                 const totalEligibleQtyUI = eligibleItemsUI.reduce((sum, i) => sum + i.qty, 0);
                 const promoUnitsUI = Math.floor(totalEligibleQtyUI / 2) * 2;
                 let unitsToDiscountUI = promoUnitsUI;
@@ -211,28 +201,25 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
                           )}
                         </div>
                       </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <button onClick={() => removeItem(item.product.id!)} className="text-muted-foreground hover:text-destructive">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <div className="flex items-center gap-1 bg-muted rounded">
+                          <button onClick={() => updateQty(item.product.id!, item.qty - 1)} className="px-2 py-0.5 text-sm hover:bg-border rounded-l">
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="px-2 text-sm font-medium">{item.qty}</span>
+                          <button onClick={() => updateQty(item.product.id!, item.qty + 1)} className="px-2 py-0.5 text-sm hover:bg-border rounded-r">
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{formatPrice((item.product.discountPrice ?? item.product.price) * item.qty)}</p>
+                      </div>
+                    </div>
                   );
                 });
               })()}
-            </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <button onClick={() => removeItem(item.product.id!)} className="text-muted-foreground hover:text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <div className="flex items-center gap-1 bg-muted rounded">
-                        <button onClick={() => updateQty(item.product.id!, item.qty - 1)} className="px-2 py-0.5 text-sm hover:bg-border rounded-l">
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="px-2 text-sm font-medium">{item.qty}</span>
-                        <button onClick={() => updateQty(item.product.id!, item.qty + 1)} className="px-2 py-0.5 text-sm hover:bg-border rounded-r">
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{formatPrice(price * item.qty)}</p>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
 
             <div className="border-t border-border p-4 space-y-3">
