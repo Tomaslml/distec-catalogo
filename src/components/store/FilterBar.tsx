@@ -1,6 +1,8 @@
 import { Search, Tag } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import type { Product } from "@/lib/seedData";
+import { isProductEligibleForMaryBosquesPromo } from "@/lib/promoUtils";
+
 
 interface FilterBarProps {
   products: Product[];
@@ -33,7 +35,7 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
       result = result.filter(
         (p) => 
           p.discountPrice !== null || 
-          /bosque/i.test(p.brand)
+          isProductEligibleForMaryBosquesPromo(p)
       );
     }
     if (debouncedSearch) {

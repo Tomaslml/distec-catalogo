@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import type { Product } from "@/lib/seedData";
+import { isProductEligibleForMaryBosquesPromo } from "@/lib/promoUtils";
+
 import {
   Dialog,
   DialogContent,
@@ -57,7 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             −{discountPercent}% OFF
           </span>
         )}
-        {/bosque/i.test(product.brand) && (
+        {isProductEligibleForMaryBosquesPromo(product) && (
           <span className="absolute top-2 right-2 z-10 bg-accent text-accent-foreground text-[10px] font-black px-2 py-0.5 rounded animate-pulse shadow-sm border border-white/20 pointer-events-none">
             2 X $13.000
           </span>

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import type { Product } from "@/lib/seedData";
+import { isProductEligibleForMaryBosquesPromo } from "@/lib/promoUtils";
+
 
 export interface CartItem {
   product: Product;
@@ -58,11 +60,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const eligibleMaryBosquesPrices: number[] = [];
   items.forEach((i) => {
-    const brand = i.product.brand.toLowerCase().trim();
-    // Regex flexible para capturar "Mary Bosques" con cualquier espacio o variacin de espacios
-    const isMaryBosques = /bosque/i.test(i.product.brand);
+    const isEligible = isProductEligibleForMaryBosquesPromo(i.product);
     
-    if (isMaryBosques) {
+    if (isEligible) {
       for (let n = 0; n < i.qty; n++) {
         eligibleMaryBosquesPrices.push(i.product.discountPrice ?? i.product.price);
       }
