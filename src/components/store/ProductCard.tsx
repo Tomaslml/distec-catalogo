@@ -22,9 +22,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [added, setAdded] = useState(false);
   const [modalAdded, setModalAdded] = useState(false);
 
-  const hasDiscount = product.discountPrice !== null && product.discountPrice < product.price;
+  const isMaryBosques = /bosque/i.test(product.brand);
+  const isPromoEligible = isProductEligibleForMaryBosquesPromo(product);
+  
+  // Si es Mary Bosques pero no es de la promo, ignoramos su descuento individual para que no salga como oferta
+  const effectiveDiscountPrice = (isMaryBosques && !isPromoEligible) ? null : product.discountPrice;
+
+  const hasDiscount = effectiveDiscountPrice !== null && effectiveDiscountPrice < product.price;
   const discountPercent = hasDiscount
-    ? Math.round((1 - product.discountPrice! / product.price) * 100)
+    ? Math.round((1 - effectiveDiscountPrice! / product.price) * 100)
     : 0;
 
   const handleAdd = (e?: React.MouseEvent) => {
@@ -98,7 +104,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {formatPrice(product.price)}
                   </span>
                   <span className="text-accent font-bold text-lg">
-                    {formatPrice(product.discountPrice!)}
+                    {formatPrice(effectiveDiscountPrice!)}
                   </span>
                 </>
               ) : (
@@ -169,7 +175,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {hasDiscount ? (
                   <>
                     <span className="text-accent font-black text-3xl">
-                      {formatPrice(product.discountPrice!)}
+                      {formatPrice(effectiveDiscountPrice!)}
                     </span>
                     <span className="text-muted-foreground text-lg line-through">
                       {formatPrice(product.price)}

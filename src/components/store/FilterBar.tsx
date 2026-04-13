@@ -32,11 +32,15 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
       result = result.filter((p) => p.brand === selectedBrand);
     }
     if (promoOnly) {
-      result = result.filter(
-        (p) => 
-          p.discountPrice !== null || 
-          isProductEligibleForMaryBosquesPromo(p)
-      );
+      result = result.filter((p) => {
+        const isMaryBosques = /bosque/i.test(p.brand);
+        if (isMaryBosques) {
+          // Si es Mary Bosques, solo aparece en Ofertas si es parte de la promo 2x13000
+          return isProductEligibleForMaryBosquesPromo(p);
+        }
+        // Para otras marcas, aparece si tiene precio de descuento
+        return p.discountPrice !== null;
+      });
     }
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
