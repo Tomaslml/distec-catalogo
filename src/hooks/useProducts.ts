@@ -31,6 +31,29 @@ export function useProducts() {
   const [hasMore, setHasMore] = useState(true);
   const pageRef = useRef(0);
 
+  const allLoadedRef = useRef(false);
+
+  // Carga en segundo plano (silenciosa, sin spinner)
+  const backgroundLoadAll = useCallback(async () => {
+    if (allLoadedRef.current) return;
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+      if (error) throw error;
+      if (data) {
+        const formatted = formatSupabaseProducts(data);
+        setProducts(formatted);
+        saveCache(formatted);
+        setHasMore(false);
+        allLoadedRef.current = true;
+        pageRef.current = Math.ceil(formatted.length / PAGE_SIZE) - 1;
+      }
+    } catch {}
+  }, []);
+
   // Carga inicial: muestra cache instantáneamente y luego refresca
   useEffect(() => {
     const init = async () => {
@@ -42,6 +65,11 @@ export function useProducts() {
           if (Array.isArray(parsed) && parsed.length > 0) {
             setProducts(parsed);
             setLoading(false);
+            // Si el caché tiene todos los productos, no re-cargar
+            if (parsed.length >= PAGE_SIZE * 2) {
+              allLoadedRef.current = true;
+              setHasMore(false);
+            }
           }
         }
       } catch {}
@@ -68,10 +96,15 @@ export function useProducts() {
       } finally {
         setLoading(false);
       }
+
+      // 3. Carga silenciosa del resto en segundo plano (después de 2 segundos)
+      if (!allLoadedRef.current) {
+        setTimeout(() => backgroundLoadAll(), 2000);
+      }
     };
 
     init();
-  }, []);
+  }, [backgroundLoadAll]);
 
   // Cargar más productos (para el botón "Ver más")
   const loadMore = useCallback(async () => {
@@ -108,9 +141,9 @@ export function useProducts() {
     }
   }, [loadingMore, hasMore]);
 
-  // Carga TODOS los productos (usada cuando se activa un filtro)
+  // Carga TODOS los productos (usada cuando se activa un filtro o búsqueda)
   const loadAll = useCallback(async () => {
-    if (loadingMore) return;
+    if (allLoadedRef.current || loadingMore) return;
     setLoadingMore(true);
     try {
       const { data, error } = await supabase
@@ -124,7 +157,8 @@ export function useProducts() {
         const formatted = formatSupabaseProducts(data);
         setProducts(formatted);
         saveCache(formatted);
-        setHasMore(false); // Ya están todos cargados
+        setHasMore(false);
+        allLoadedRef.current = true;
       }
     } catch (err) {
       console.error("Error cargando todos los productos:", err);

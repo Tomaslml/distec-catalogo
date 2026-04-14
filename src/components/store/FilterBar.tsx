@@ -30,10 +30,16 @@ export default function FilterBar({
   const [allBrands, setAllBrands] = useState<string[]>([]);
   const [loadingBrands, setLoadingBrands] = useState(false);
 
-  // Debounce búsqueda
+  // Debounce búsqueda + cargar todos si el usuario busca
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    if (search.trim() && onNeedAllProducts) {
+      onNeedAllProducts(); // Asegura que todos los productos estén cargados al buscar
+    }
   }, [search]);
 
   // Traer todas las marcas directamente de Supabase (solo la columna "brand")
