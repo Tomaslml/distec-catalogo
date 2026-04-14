@@ -38,7 +38,12 @@ export function useProducts() {
         if (data) {
           const formatted = formatSupabaseProducts(data);
           setProducts(formatted || []);
-          localStorage.setItem("distec_products_cache", JSON.stringify(formatted));
+          try {
+            localStorage.setItem("distec_products_cache", JSON.stringify(formatted));
+          } catch (e) {
+            console.warn("No se pudo guardar el cache: almacenamiento lleno.", e);
+            localStorage.removeItem("distec_products_cache");
+          }
         }
       } catch (err) {
         console.error("Supabase fetch error:", err);
