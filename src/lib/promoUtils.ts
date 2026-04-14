@@ -4,15 +4,17 @@ export function isProductEligibleForMaryBosquesPromo(product: Product): boolean 
   const isMaryBosques = /bosque/i.test(product.brand);
   if (!isMaryBosques) return false;
 
-  // Productos excluidos de la promoción 2 x $13.000
   const excludedNames = [
-    "argán express",
+    "argan express",
     "keratina express",
-    "emulsión hidratante"
+    "emulsion hidratante"
   ];
 
-  const nameLower = product.name.toLowerCase();
-  const isExcluded = excludedNames.some(excluded => nameLower.includes(excluded));
+  const normalize = (str: string) => 
+    str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const nameNormalized = normalize(product.name);
+  const isExcluded = excludedNames.some(excluded => nameNormalized.includes(excluded));
 
   return !isExcluded;
 }

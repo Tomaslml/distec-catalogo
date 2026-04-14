@@ -38,28 +38,7 @@ export default function FilterBar({
   useEffect(() => {
     let result = [...products];
     
-    // Filtro especial para el botn del Hero (Solo Promo Mary Bosques)
-    if (maryBosquesOnly) {
-      result = result.filter((p) => isProductEligibleForMaryBosquesPromo(p));
-    }
-    
-    // Si hay marcas seleccionadas, filtramos por ellas
-    if (selectedBrands.length > 0) {
-      result = result.filter((p) => selectedBrands.includes(p.brand));
-    }
-    
-    if (promoOnly) {
-      result = result.filter((p) => {
-        const isMaryBosques = /bosque/i.test(p.brand);
-        if (isMaryBosques) {
-          // Aparece en Ofertas si es parte de la promo 2x13000 O si tiene un descuento individual
-          return isProductEligibleForMaryBosquesPromo(p) || p.discountPrice !== null;
-        }
-        // Para otras marcas, aparece si tiene precio de descuento
-        return p.discountPrice !== null;
-      });
-    }
-    
+    // 1. Filtro de Bsqueda (siempre se aplica si hay texto)
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       result = result.filter(
@@ -69,6 +48,29 @@ export default function FilterBar({
           p.description.toLowerCase().includes(q)
       );
     }
+
+    // 2. Filtro especial Promo Hero (Mary Bosques Doypacks)
+    if (maryBosquesOnly) {
+      result = result.filter((p) => isProductEligibleForMaryBosquesPromo(p));
+    }
+    
+    // 3. Filtro de Ofertas Generales
+    else if (promoOnly) {
+      result = result.filter((p) => {
+        const isMaryBosques = /bosque/i.test(p.brand);
+        if (isMaryBosques) {
+          // Aparece en Ofertas si es parte de la promo 2x13000 O si tiene un descuento individual
+          return isProductEligibleForMaryBosquesPromo(p) || p.discountPrice !== null;
+        }
+        return p.discountPrice !== null;
+      });
+    }
+    
+    // 4. Filtro de Marcas
+    else if (selectedBrands.length > 0) {
+      result = result.filter((p) => selectedBrands.includes(p.brand));
+    }
+
     onFilter(result);
   }, [selectedBrands, promoOnly, maryBosquesOnly, debouncedSearch, products, onFilter]);
 
