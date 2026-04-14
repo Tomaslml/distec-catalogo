@@ -13,13 +13,15 @@ export default function Index() {
   const { products, loading } = useProducts();
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [promoOnly, setPromoOnly] = useState(false);
+  const [maryBosquesOnly, setMaryBosquesOnly] = useState(false);
 
   const handleFilter = useCallback((result: Product[]) => {
     setFiltered(result);
   }, []);
 
   const handleShowOffers = () => {
-    setPromoOnly(true);
+    setMaryBosquesOnly(true);
+    setPromoOnly(false);
     document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -32,6 +34,8 @@ export default function Index() {
         onFilter={handleFilter} 
         promoOnly={promoOnly}
         setPromoOnly={setPromoOnly}
+        maryBosquesOnly={maryBosquesOnly}
+        setMaryBosquesOnly={setMaryBosquesOnly}
       />
 
       <main className="container mx-auto px-4 py-6 flex-1">

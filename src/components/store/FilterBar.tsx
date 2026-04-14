@@ -9,9 +9,18 @@ interface FilterBarProps {
   onFilter: (filtered: Product[]) => void;
   promoOnly: boolean;
   setPromoOnly: (val: boolean) => void;
+  maryBosquesOnly: boolean;
+  setMaryBosquesOnly: (val: boolean) => void;
 }
 
-export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly }: FilterBarProps) {
+export default function FilterBar({ 
+  products, 
+  onFilter, 
+  promoOnly, 
+  setPromoOnly,
+  maryBosquesOnly,
+  setMaryBosquesOnly
+}: FilterBarProps) {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -28,6 +37,11 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
 
   useEffect(() => {
     let result = [...products];
+    
+    // Filtro especial para el botn del Hero (Solo Promo Mary Bosques)
+    if (maryBosquesOnly) {
+      result = result.filter((p) => isProductEligibleForMaryBosquesPromo(p));
+    }
     
     // Si hay marcas seleccionadas, filtramos por ellas
     if (selectedBrands.length > 0) {
@@ -56,11 +70,12 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
       );
     }
     onFilter(result);
-  }, [selectedBrands, promoOnly, debouncedSearch, products, onFilter]);
+  }, [selectedBrands, promoOnly, maryBosquesOnly, debouncedSearch, products, onFilter]);
 
   const toggleBrand = (brand: string) => {
-    // Si seleccionamos una marca, quitamos el filtro de Ofertas
+    // Si seleccionamos una marca, quitamos los filtros de Ofertas y Promo Hero
     setPromoOnly(false);
+    setMaryBosquesOnly(false);
     
     setSelectedBrands((prev) => 
       prev.includes(brand) 
@@ -73,14 +88,16 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
     const newValue = !promoOnly;
     setPromoOnly(newValue);
     if (newValue) {
-      // Si activamos ofertas, quitamos las marcas seleccionadas
+      // Si activamos ofertas, quitamos las marcas y la promo hero
       setSelectedBrands([]);
+      setMaryBosquesOnly(false);
     }
   };
 
   const clearAllBrands = () => {
     setSelectedBrands([]);
     setPromoOnly(false);
+    setMaryBosquesOnly(false);
   };
 
   const [showBrands, setShowBrands] = useState(false);
@@ -88,6 +105,7 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
   const activeFiltersCount =
     (selectedBrands.length) +
     (promoOnly ? 1 : 0) +
+    (maryBosquesOnly ? 1 : 0) +
     (debouncedSearch.trim() ? 1 : 0);
 
   return (
