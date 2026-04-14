@@ -139,12 +139,7 @@ export default function FilterBar({
                   : "bg-white text-foreground border-border hover:bg-muted"
               }`}
             >
-              <span>Filtros de Marca</span>
-              {selectedBrands.length > 0 && (
-                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] ml-1">
-                  {selectedBrands.length}
-                </span>
-              )}
+              <span>Filtrar por marca</span>
             </button>
 
             {/* LISTA DESPLEGABLE (Dropdown) */}
@@ -159,9 +154,9 @@ export default function FilterBar({
                     <span className="text-xs font-bold px-2 text-muted-foreground uppercase tracking-wider">Marcas Disponibles</span>
                     <button 
                       onClick={clearAllBrands}
-                      className="text-[10px] font-black text-accent hover:underline px-2"
+                      className="text-[10px] font-black text-accent hover:bg-accent/10 py-1 px-3 rounded-lg border border-accent/20 transition-colors"
                     >
-                      LIMPIAR
+                      LIMPIAR TODO
                     </button>
                   </div>
                   <div className="max-h-80 overflow-y-auto p-1">
@@ -188,9 +183,13 @@ export default function FilterBar({
           </div>
           
           {activeFiltersCount > 0 && (
-            <span className="bg-accent text-accent-foreground text-xs font-bold rounded-full h-8 px-4 flex items-center justify-center flex-shrink-0 animate-in zoom-in shadow-sm border border-white/20">
-              {activeFiltersCount} {activeFiltersCount === 1 ? 'filtro' : 'filtros'}
-            </span>
+            <button
+              onClick={clearAllBrands}
+              className="group bg-accent hover:bg-accent/90 text-accent-foreground text-xs font-bold rounded-full h-9 px-4 flex items-center justify-center gap-2 flex-shrink-0 animate-in zoom-in shadow-md border border-white/20 transition-all hover:scale-105 active:scale-95"
+            >
+              <span>{activeFiltersCount} {activeFiltersCount === 1 ? 'filtro' : 'filtros'}</span>
+              <X className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            </button>
           )}
         </div>
         <div className="relative">

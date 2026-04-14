@@ -18,8 +18,8 @@ export default function StoreHeader() {
         scrolled ? "shadow-md" : ""
       } bg-background/95 backdrop-blur-sm border-b border-border`}
     >
-      <div className="container mx-auto flex items-center justify-between py-3 px-4">
-        <h1 className="font-heading text-3xl md:text-5xl font-bold text-accent tracking-wide uppercase">
+      <div className="container mx-auto flex items-center justify-between py-2 px-4 h-16 md:h-20">
+        <h1 className="font-heading text-3xl md:text-5xl font-bold text-accent tracking-wide uppercase leading-none">
           Distec
         </h1>
         <button
