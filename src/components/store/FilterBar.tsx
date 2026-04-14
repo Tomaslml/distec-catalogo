@@ -144,7 +144,12 @@ export default function FilterBar({
           {/* BOTÓN DESPLEGABLE DE MARCAS */}
           <div className="relative">
             <button
-              onClick={() => setShowBrands(!showBrands)}
+              onClick={() => {
+                if (!showBrands && onNeedAllProducts) {
+                  onNeedAllProducts(); // Cargar todas las marcas al abrir
+                }
+                setShowBrands(!showBrands);
+              }}
               className={`whitespace-nowrap px-6 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-sm border-2 ${
                 selectedBrands.length > 0
                   ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/20"
