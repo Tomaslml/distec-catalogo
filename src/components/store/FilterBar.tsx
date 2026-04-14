@@ -149,22 +149,22 @@ export default function FilterBar({
                   className="fixed inset-0 z-10" 
                   onClick={() => setShowBrands(false)} 
                 />
-                <div className="absolute left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="absolute left-0 mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in duration-200">
                   <div className="p-2 border-b border-border bg-muted/30 flex items-center justify-between">
-                    <span className="text-xs font-bold px-2 text-muted-foreground uppercase tracking-wider">Marcas Disponibles</span>
+                    <span className="text-[10px] font-bold px-1 text-muted-foreground uppercase tracking-wider">Marcas</span>
                     <button 
                       onClick={clearAllBrands}
-                      className="text-[10px] font-black text-accent hover:bg-accent/10 py-1 px-3 rounded-lg border border-accent/20 transition-colors"
+                      className="text-[9px] font-black text-accent hover:bg-accent/10 py-1 px-2 rounded-lg border border-accent/20 transition-colors"
                     >
-                      LIMPIAR TODO
+                      LIMPIAR
                     </button>
                   </div>
-                  <div className="max-h-80 overflow-y-auto p-1">
+                  <div className="max-h-64 overflow-y-auto p-1 scrollbar-thin">
                     {brands.map((brand) => (
                       <button
                         key={brand}
                         onClick={() => toggleBrand(brand)}
-                        className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b last:border-0 border-border/50 flex items-center justify-between group ${
+                        className={`w-full text-left px-3 py-2.5 text-xs font-medium transition-colors border-b last:border-0 border-border/40 flex items-center justify-between group ${
                           selectedBrands.includes(brand)
                             ? "bg-primary/5 text-primary"
                             : "hover:bg-muted"
@@ -172,11 +172,12 @@ export default function FilterBar({
                       >
                         {brand}
                         {selectedBrands.includes(brand) && (
-                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                         )}
                       </button>
                     ))}
                   </div>
+                  <div className="h-2 bg-muted/10 w-full" /> {/* Pequeo espaciador final */}
                 </div>
               </>
             )}
