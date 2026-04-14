@@ -27,6 +27,19 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* RUEDA DE CARGA / LOADING OVERLAY */}
+      {loading && products.length === 0 && (
+        <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <div className="relative flex flex-col items-center">
+            <div className="loading-spinner mb-6" />
+            <h1 className="font-heading text-4xl font-bold text-accent animate-pulse-simple uppercase tracking-widest">
+              Distec
+            </h1>
+            <p className="text-muted-foreground text-sm mt-4 font-medium animate-pulse">Sintonizando tu belleza...</p>
+          </div>
+        </div>
+      )}
+
       <StoreHeader />
       <Hero onShowOffers={handleShowOffers} />
       <FilterBar 
@@ -39,7 +52,7 @@ export default function Index() {
       />
 
       <main className="container mx-auto px-4 py-6 flex-1">
-        {loading ? (
+        {loading && products.length === 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-card rounded-lg border border-border overflow-hidden animate-pulse">
