@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useProducts } from "@/hooks/useProducts";
 import StoreHeader from "@/components/store/StoreHeader";
 import Hero from "@/components/store/Hero";
@@ -10,7 +10,7 @@ import Footer from "@/components/store/Footer";
 import type { Product } from "@/lib/seedData";
 
 export default function Index() {
-  const { products, loading, loadingMore, hasMore, loadMore } = useProducts();
+  const { products, loading, loadingMore, hasMore, loadMore, loadAll } = useProducts();
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [promoOnly, setPromoOnly] = useState(false);
   const [maryBosquesOnly, setMaryBosquesOnly] = useState(false);
@@ -20,6 +20,13 @@ export default function Index() {
     setFiltered(result);
     setIsFiltering(result.length !== products.length);
   }, [products.length]);
+
+  // Cuando se activa cualquier filtro especial, cargar todos los productos
+  useEffect(() => {
+    if (promoOnly || maryBosquesOnly) {
+      loadAll();
+    }
+  }, [promoOnly, maryBosquesOnly]);
 
   const handleShowOffers = () => {
     setMaryBosquesOnly(true);
@@ -57,6 +64,7 @@ export default function Index() {
         setPromoOnly={setPromoOnly}
         maryBosquesOnly={maryBosquesOnly}
         setMaryBosquesOnly={setMaryBosquesOnly}
+        onNeedAllProducts={loadAll}
       />
 
       <main id="productos" className="container mx-auto px-4 py-6 flex-1">

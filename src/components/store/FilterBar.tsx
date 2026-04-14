@@ -11,6 +11,7 @@ interface FilterBarProps {
   setPromoOnly: (val: boolean) => void;
   maryBosquesOnly: boolean;
   setMaryBosquesOnly: (val: boolean) => void;
+  onNeedAllProducts?: () => void;
 }
 
 export default function FilterBar({ 
@@ -19,7 +20,8 @@ export default function FilterBar({
   promoOnly, 
   setPromoOnly,
   maryBosquesOnly,
-  setMaryBosquesOnly
+  setMaryBosquesOnly,
+  onNeedAllProducts
 }: FilterBarProps) {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [search, setSearch] = useState("");
@@ -100,6 +102,16 @@ export default function FilterBar({
     setSelectedBrands([]);
     setPromoOnly(false);
     setMaryBosquesOnly(false);
+  };
+
+  const toggleBrand = (brand: string) => {
+    const isAdding = !selectedBrands.includes(brand);
+    if (isAdding && onNeedAllProducts) {
+      onNeedAllProducts(); // Cargar todos antes de filtrar
+    }
+    setSelectedBrands(prev =>
+      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    );
   };
 
   const [showBrands, setShowBrands] = useState(false);

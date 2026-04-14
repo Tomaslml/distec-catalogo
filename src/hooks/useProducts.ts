@@ -108,6 +108,31 @@ export function useProducts() {
     }
   }, [loadingMore, hasMore]);
 
+  // Carga TODOS los productos (usada cuando se activa un filtro)
+  const loadAll = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("sort_order", { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const formatted = formatSupabaseProducts(data);
+        setProducts(formatted);
+        saveCache(formatted);
+        setHasMore(false); // Ya están todos cargados
+      }
+    } catch (err) {
+      console.error("Error cargando todos los productos:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore]);
+
   const updateProductOrder = async (orderedIds: { id: string; sort_order: number }[]) => {
     const updates = orderedIds.map(item =>
       supabase.from("products").update({ sort_order: item.sort_order }).eq("id", item.id)
@@ -123,5 +148,5 @@ export function useProducts() {
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  return { products, loading, loadingMore, hasMore, loadMore, updateProductOrder, deleteProduct };
+  return { products, loading, loadingMore, hasMore, loadMore, loadAll, updateProductOrder, deleteProduct };
 }
