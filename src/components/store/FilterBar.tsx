@@ -184,7 +184,7 @@ export default function FilterBar({
                       LIMPIAR
                     </button>
                   </div>
-                  <div className="max-h-64 overflow-y-auto p-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-accent/40 [&::-webkit-scrollbar-track]:bg-transparent">
+                  <div className="max-h-64 overflow-y-auto p-1 brand-scrollbar">
                     {loadingBrands ? (
                       <div className="py-4 text-center text-xs text-muted-foreground animate-pulse">Cargando marcas...</div>
                     ) : (
