@@ -118,6 +118,17 @@ export function useProducts() {
     await fetchProducts();
   };
 
+  const deleteProduct = async (id: string) => {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from(TABLE).delete().eq("id", id);
+      if (error) throw error;
+    } else {
+      const all = getLocalProducts().filter((p) => p.id !== id);
+      saveLocalProducts(all);
+    }
+    await fetchProducts();
+  };
+
   const updateProductOrder = async (orderedIds: { id: string, sort_order: number }[]) => {
     if (isSupabaseConfigured) {
       // Usamos upsert para actualizar mltiples filas en una sola peticin
