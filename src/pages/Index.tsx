@@ -49,7 +49,7 @@ export default function Index() {
               Distec
             </h1>
             <p className="text-muted-foreground text-sm font-medium animate-pulse">
-              Cargando productos...
+              Sintonizando tu belleza...
             </p>
           </div>
         </div>
