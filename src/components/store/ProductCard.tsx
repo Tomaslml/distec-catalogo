@@ -85,58 +85,58 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
             <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
-
-          <div className="p-3 pb-0 space-y-1.5 flex-grow">
-            <p className="text-xs uppercase tracking-wider font-bold text-muted-foreground">
-              {product.brand}
-            </p>
-            <h3 className="font-bold text-lg leading-tight text-foreground mb-1 line-clamp-2">
-              {product.name}
-            </h3>
-            <p className="text-xs text-muted-foreground line-clamp-2">
+          <div className="p-3 sm:p-4 flex flex-col flex-1 gap-1 sm:gap-2 overflow-hidden">
+            <div className="flex flex-col">
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5 sm:mb-1">
+                {product.brand}
+              </span>
+              <h3 className="font-heading text-base sm:text-xl font-bold leading-tight line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem] group-hover:text-accent transition-colors">
+                {product.name}
+              </h3>
+            </div>
+            
+            <p className="text-[10px] sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed opacity-80">
               {product.description}
             </p>
 
-            <div className="flex items-baseline gap-2 pt-1 pb-2">
-              {hasDiscount ? (
-                <>
-                  <span className="text-muted-foreground text-sm line-through">
-                    {formatPrice(product.price)}
+            <div className="mt-auto pt-2 sm:pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 mb-3 sm:mb-4">
+                <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
+                  <span className="text-lg sm:text-2xl font-bold text-foreground">
+                    {formatPrice(finalPrice)}
                   </span>
-                  <span className="text-accent font-bold text-lg">
-                    {formatPrice(effectiveDiscountPrice!)}
-                  </span>
-                </>
-              ) : (
-                <span className="text-foreground font-bold text-lg">
-                  {formatPrice(product.price)}
-                </span>
-              )}
+                  {hasDiscount && (
+                    <span className="text-[10px] sm:text-sm text-muted-foreground line-through opacity-50">
+                      {formatPrice(product.price)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={handleAdd}
+                disabled={added}
+                className={`w-full py-2 sm:py-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md ${
+                  added
+                    ? "bg-whatsapp text-primary-foreground"
+                    : "bg-primary text-primary-foreground hover:opacity-90 active:scale-95 shadow-primary/10"
+                }`}
+              >
+                {added ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Agregado</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Agregar</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </DialogTrigger>
-
-        <div className="p-3 pt-0 mt-auto">
-          <button
-            onClick={handleAdd}
-            disabled={added}
-            className={`w-full py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all ${
-              added
-                ? "bg-whatsapp text-primary-foreground"
-                : "bg-primary text-primary-foreground hover:opacity-90 active:scale-95"
-            }`}
-          >
-            {added ? (
-              <>
-                <Check className="w-4 h-4" /> Agregado!
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-4 h-4" /> Agregar al carrito
-              </>
-            )}
-          </button>
-        </div>
       </div>
 
       <DialogContent className="sm:max-w-[600px] w-[95vw] overflow-hidden p-0 border-0 bg-background max-h-[90vh] flex flex-col rounded-xl z-50">
@@ -195,7 +195,6 @@ export default function ProductCard({ product }: ProductCardProps) {
             
           </div>
         </div>
-        
         <div className="p-4 bg-background/95 backdrop-blur border-t flex justify-end sticky bottom-0">
            <button
              onClick={handleModalAdd}

@@ -130,7 +130,7 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
         className="fixed inset-0 bg-foreground/30 z-50"
         onClick={() => setIsOpen(false)}
       />
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background z-50 shadow-2xl animate-slide-in-right flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-[90%] xs:w-[380px] sm:w-[500px] md:max-w-md bg-background z-50 shadow-2xl animate-slide-in-right flex flex-col border-l border-border">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="font-heading text-xl font-bold">
             Tu carrito 🛍️ <span className="text-sm font-sans font-normal text-muted-foreground">({totalItems} items)</span>
