@@ -1,165 +1,127 @@
-import { useState, useEffect } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
-import { seedProducts, type Product } from "@/lib/seedData";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import type { Product } from "@/lib/seedData";
 
-const TABLE = "products";
+const PAGE_SIZE = 12;
+const CACHE_KEY = "distec_products_cache";
 
-function getLocalProducts(): Product[] {
-  const stored = localStorage.getItem("distec_products");
-  if (stored) return JSON.parse(stored);
-  const seeded = seedProducts.map((p, i) => ({
+function formatSupabaseProducts(data: any[]): Product[] {
+  return data.map((p) => ({
     ...p,
-    id: `local_${i}`,
-    createdAt: new Date(),
+    isNew: p.is_new,
+    discountPrice: p.discount_price,
+    imageUrl: p.image_url,
+    sortOrder: p.sort_order,
+    emoji: p.emoji || "🧴",
   }));
-  localStorage.setItem("distec_products", JSON.stringify(seeded));
-  return seeded;
 }
 
-function saveLocalProducts(products: Product[]) {
-  localStorage.setItem("distec_products", JSON.stringify(products));
+function saveCache(products: Product[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(products.slice(0, 48)));
+  } catch {
+    try { localStorage.removeItem(CACHE_KEY); } catch {}
+  }
 }
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageRef = useRef(0);
 
-  const fetchProducts = async () => {
-    if (isSupabaseConfigured) {
+  // Carga inicial: muestra cache instantáneamente y luego refresca
+  useEffect(() => {
+    const init = async () => {
+      // 1. Mostrar caché inmediatamente
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProducts(parsed);
+            setLoading(false);
+          }
+        }
+      } catch {}
+
+      // 2. Cargar primera página de Supabase
       try {
         const { data, error } = await supabase
-          .from(TABLE)
+          .from("products")
           .select("*")
           .order("sort_order", { ascending: true })
-          .order("created_at", { ascending: false });
+          .range(0, PAGE_SIZE - 1);
 
         if (error) throw error;
 
         if (data) {
           const formatted = formatSupabaseProducts(data);
-          setProducts(formatted || []);
-          try {
-            localStorage.setItem("distec_products_cache", JSON.stringify(formatted));
-          } catch (e) {
-            console.warn("No se pudo guardar el cache: almacenamiento lleno.", e);
-            localStorage.removeItem("distec_products_cache");
-          }
+          setProducts(formatted);
+          saveCache(formatted);
+          pageRef.current = 0;
+          setHasMore(data.length === PAGE_SIZE);
         }
       } catch (err) {
-        console.error("Supabase fetch error:", err);
+        console.error("Error cargando productos:", err);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  };
+    };
 
-  function formatSupabaseProducts(data: any[]): Product[] {
-    return data.map(d => ({
-      id: d.id,
-      name: d.name,
-      brand: d.brand,
-      price: d.price,
-      discountPrice: d.discount_price,
-      description: d.description,
-      imageUrl: d.image_url,
-      emoji: d.emoji,
-      isNew: d.is_new,
-      sortOrder: d.sort_order,
-      createdAt: new Date(d.created_at)
-    }));
-  }
-
-  useEffect(() => {
-    // Intentamos cargar del cache inmediatamente
-    const cached = localStorage.getItem("distec_products_cache");
-    if (cached) {
-      try {
-        setProducts(JSON.parse(cached));
-        setLoading(false); // Ya no mostramos skeletons si hay cache
-      } catch (e) {
-        console.error("Cache parsing error", e);
-      }
-    }
-    fetchProducts();
+    init();
   }, []);
 
-  const addProduct = async (product: Omit<Product, "id" | "createdAt">) => {
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.from(TABLE).insert([{
-        name: product.name,
-        brand: product.brand,
-        price: product.price,
-        discount_price: product.discountPrice,
-        description: product.description,
-        image_url: product.imageUrl,
-        emoji: product.emoji,
-        is_new: product.isNew,
-        sort_order: product.sortOrder ?? 0
-      }]);
-      if (error) throw error;
-    } else {
-      const all = getLocalProducts();
-      const newP = { ...product, id: `local_${Date.now()}`, createdAt: new Date() };
-      all.push(newP);
-      saveLocalProducts(all);
-    }
-    await fetchProducts();
-  };
+  // Cargar más productos (para el botón "Ver más")
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
 
-  const updateProduct = async (id: string, data: Partial<Product>) => {
-    if (isSupabaseConfigured) {
-      const updateData: any = {};
-      if (data.name !== undefined) updateData.name = data.name;
-      if (data.brand !== undefined) updateData.brand = data.brand;
-      if (data.price !== undefined) updateData.price = data.price;
-      if (data.discountPrice !== undefined) updateData.discount_price = data.discountPrice;
-      if (data.description !== undefined) updateData.description = data.description;
-      if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl;
-      if (data.emoji !== undefined) updateData.emoji = data.emoji;
-      if (data.isNew !== undefined) updateData.is_new = data.isNew;
-      if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder;
+    try {
+      const nextPage = pageRef.current + 1;
+      const from = nextPage * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
 
-      const { error } = await supabase.from(TABLE).update(updateData).eq("id", id);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .range(from, to);
+
       if (error) throw error;
-    } else {
-      const all = getLocalProducts().map((p) =>
-        p.id === id ? { ...p, ...data } : p
-      );
-      saveLocalProducts(all);
+
+      if (data) {
+        const formatted = formatSupabaseProducts(data);
+        setProducts(prev => {
+          const combined = [...prev, ...formatted];
+          saveCache(combined);
+          return combined;
+        });
+        pageRef.current = nextPage;
+        setHasMore(data.length === PAGE_SIZE);
+      }
+    } catch (err) {
+      console.error("Error cargando más productos:", err);
+    } finally {
+      setLoadingMore(false);
     }
-    await fetchProducts();
+  }, [loadingMore, hasMore]);
+
+  const updateProductOrder = async (orderedIds: { id: string; sort_order: number }[]) => {
+    const updates = orderedIds.map(item =>
+      supabase.from("products").update({ sort_order: item.sort_order }).eq("id", item.id)
+    );
+    const results = await Promise.all(updates);
+    const firstError = results.find(r => r.error)?.error;
+    if (firstError) throw firstError;
   };
 
   const deleteProduct = async (id: string) => {
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.from(TABLE).delete().eq("id", id);
-      if (error) throw error;
-    } else {
-      const all = getLocalProducts().filter((p) => p.id !== id);
-      saveLocalProducts(all);
-    }
-    await fetchProducts();
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) throw error;
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  const updateProductOrder = async (orderedIds: { id: string, sort_order: number }[]) => {
-    if (isSupabaseConfigured) {
-      // Usamos Promise.all con update para que sea rpido pero sin usar upsert (que puede fallar por RLS o falta de datos)
-      const updates = orderedIds.map(item => 
-        supabase.from(TABLE).update({ sort_order: item.sort_order }).eq("id", item.id)
-      );
-      
-      const results = await Promise.all(updates);
-      const firstError = results.find(r => r.error)?.error;
-      if (firstError) throw firstError;
-    } else {
-      const all = getLocalProducts();
-      const updated = all.map(p => {
-        const found = orderedIds.find(item => item.id === p.id);
-        return found ? { ...p, sortOrder: found.sort_order } : p;
-      });
-      saveLocalProducts(updated);
-    }
-    await fetchProducts();
-  };
-
-  return { products, loading, addProduct, updateProduct, deleteProduct, updateProductOrder, refetch: fetchProducts };
+  return { products, loading, loadingMore, hasMore, loadMore, updateProductOrder, deleteProduct };
 }
