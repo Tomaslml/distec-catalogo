@@ -29,6 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const effectiveDiscountPrice = product.discountPrice;
 
   const hasDiscount = effectiveDiscountPrice !== null && effectiveDiscountPrice < product.price;
+  const finalPrice = hasDiscount ? effectiveDiscountPrice! : product.price;
   const discountPercent = hasDiscount
     ? Math.round((1 - effectiveDiscountPrice! / product.price) * 100)
     : 0;
