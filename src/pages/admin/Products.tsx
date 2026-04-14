@@ -259,5 +259,3 @@ function MoveIcon() {
     </svg>
   );
 }
-;
-}
