@@ -1,4 +1,4 @@
-import { Search, Tag } from "lucide-react";
+import { Search, Tag, X } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import type { Product } from "@/lib/seedData";
 import { isProductEligibleForMaryBosquesPromo } from "@/lib/promoUtils";
