@@ -1,8 +1,8 @@
 import { Search, Tag, X } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import type { Product } from "@/lib/seedData";
 import { isProductEligibleForMaryBosquesPromo } from "@/lib/promoUtils";
-
+import { supabase } from "@/lib/supabase";
 
 interface FilterBarProps {
   products: Product[];
@@ -14,33 +14,52 @@ interface FilterBarProps {
   onNeedAllProducts?: () => void;
 }
 
-export default function FilterBar({ 
-  products, 
-  onFilter, 
-  promoOnly, 
+export default function FilterBar({
+  products,
+  onFilter,
+  promoOnly,
   setPromoOnly,
   maryBosquesOnly,
   setMaryBosquesOnly,
-  onNeedAllProducts
+  onNeedAllProducts,
 }: FilterBarProps) {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showBrands, setShowBrands] = useState(false);
+  const [allBrands, setAllBrands] = useState<string[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
 
+  // Debounce búsqueda
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
 
-  const brands = useMemo(() => {
-    const set = new Set(products.map((p) => p.brand));
-    return Array.from(set).sort();
-  }, [products]);
+  // Traer todas las marcas directamente de Supabase (solo la columna "brand")
+  const fetchAllBrands = async () => {
+    if (allBrands.length > 0) return; // Ya cargadas, no repetir
+    setLoadingBrands(true);
+    try {
+      const { data, error } = await supabase.from("products").select("brand");
+      if (!error && data) {
+        const unique = [...new Set(data.map((p: any) => p.brand as string))].sort();
+        setAllBrands(unique);
+      }
+    } catch {}
+    finally { setLoadingBrands(false); }
+  };
 
+  // Marcas a mostrar en el dropdown
+  const brands = allBrands.length > 0
+    ? allBrands
+    : [...new Set(products.map((p) => p.brand))].sort();
+
+  // Filtrado principal
   useEffect(() => {
     let result = [...products];
-    
-    // 1. Filtro de Bsqueda (siempre se aplica si hay texto)
+
+    // 1. Búsqueda de texto
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       result = result.filter(
@@ -51,24 +70,21 @@ export default function FilterBar({
       );
     }
 
-    // 2. Filtro especial Promo Hero (Mary Bosques Doypacks)
+    // 2. Promo Hero exclusiva (Mary Bosques doypacks)
     if (maryBosquesOnly) {
       result = result.filter((p) => isProductEligibleForMaryBosquesPromo(p));
     }
-    
-    // 3. Filtro de Ofertas Generales
+    // 3. Ofertas generales
     else if (promoOnly) {
       result = result.filter((p) => {
         const isMaryBosques = /bosque/i.test(p.brand);
         if (isMaryBosques) {
-          // Aparece en Ofertas si es parte de la promo 2x13000 O si tiene un descuento individual
           return isProductEligibleForMaryBosquesPromo(p) || p.discountPrice !== null;
         }
         return p.discountPrice !== null;
       });
     }
-    
-    // 4. Filtro de Marcas
+    // 4. Filtro por marca
     else if (selectedBrands.length > 0) {
       result = result.filter((p) => selectedBrands.includes(p.brand));
     }
@@ -77,14 +93,14 @@ export default function FilterBar({
   }, [selectedBrands, promoOnly, maryBosquesOnly, debouncedSearch, products, onFilter]);
 
   const toggleBrand = (brand: string) => {
-    // Si seleccionamos una marca, quitamos los filtros de Ofertas y Promo Hero
+    const isAdding = !selectedBrands.includes(brand);
+    if (isAdding && onNeedAllProducts) {
+      onNeedAllProducts(); // Asegura que todos los productos están cargados
+    }
     setPromoOnly(false);
     setMaryBosquesOnly(false);
-    
-    setSelectedBrands((prev) => 
-      prev.includes(brand) 
-        ? prev.filter(b => b !== brand) 
-        : [...prev, brand]
+    setSelectedBrands((prev) =>
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
     );
   };
 
@@ -92,9 +108,9 @@ export default function FilterBar({
     const newValue = !promoOnly;
     setPromoOnly(newValue);
     if (newValue) {
-      // Si activamos ofertas, quitamos las marcas y la promo hero
       setSelectedBrands([]);
       setMaryBosquesOnly(false);
+      if (onNeedAllProducts) onNeedAllProducts();
     }
   };
 
@@ -104,20 +120,8 @@ export default function FilterBar({
     setMaryBosquesOnly(false);
   };
 
-  const toggleBrand = (brand: string) => {
-    const isAdding = !selectedBrands.includes(brand);
-    if (isAdding && onNeedAllProducts) {
-      onNeedAllProducts(); // Cargar todos antes de filtrar
-    }
-    setSelectedBrands(prev =>
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
-    );
-  };
-
-  const [showBrands, setShowBrands] = useState(false);
-
   const activeFiltersCount =
-    (selectedBrands.length) +
+    selectedBrands.length +
     (promoOnly ? 1 : 0) +
     (maryBosquesOnly ? 1 : 0) +
     (debouncedSearch.trim() ? 1 : 0);
@@ -126,7 +130,8 @@ export default function FilterBar({
     <div id="productos" className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border py-4">
       <div className="container mx-auto px-4 space-y-4">
         <div className="flex flex-wrap items-center gap-3 pb-1">
-          {/* BOTÓN OFERTAS (Lo mantenemos afuera para que destaque, pero agrupado si prefieres) */}
+
+          {/* BOTÓN OFERTAS */}
           <button
             onClick={handlePromoToggle}
             className={`whitespace-nowrap px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-sm border-2 transform hover:scale-105 active:scale-95 ${
@@ -145,9 +150,7 @@ export default function FilterBar({
           <div className="relative">
             <button
               onClick={() => {
-                if (!showBrands && onNeedAllProducts) {
-                  onNeedAllProducts(); // Cargar todas las marcas al abrir
-                }
+                if (!showBrands) fetchAllBrands(); // Cargar marcas al abrir
                 setShowBrands(!showBrands);
               }}
               className={`whitespace-nowrap px-6 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-sm border-2 ${
@@ -159,57 +162,63 @@ export default function FilterBar({
               <span>Filtrar por marca</span>
             </button>
 
-            {/* LISTA DESPLEGABLE (Dropdown) */}
+            {/* DROPDOWN */}
             {showBrands && (
               <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setShowBrands(false)} 
-                />
+                <div className="fixed inset-0 z-10" onClick={() => setShowBrands(false)} />
                 <div className="absolute left-0 mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in duration-200">
                   <div className="p-2 border-b border-border bg-muted/30 flex items-center justify-between">
-                    <span className="text-[10px] font-bold px-1 text-muted-foreground uppercase tracking-wider">Marcas</span>
-                    <button 
+                    <span className="text-[10px] font-bold px-1 text-muted-foreground uppercase tracking-wider">
+                      Marcas
+                    </span>
+                    <button
                       onClick={clearAllBrands}
                       className="text-[9px] font-black text-accent hover:bg-accent/10 py-1 px-2 rounded-lg border border-accent/20 transition-colors"
                     >
                       LIMPIAR
                     </button>
                   </div>
-                  <div className="max-h-64 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent/60 pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-track]:bg-transparent">
-                    {brands.map((brand) => (
-                      <button
-                        key={brand}
-                        onClick={() => toggleBrand(brand)}
-                        className={`w-full text-left px-3 py-2.5 text-xs font-medium transition-colors border-b last:border-0 border-border/40 flex items-center justify-between group ${
-                          selectedBrands.includes(brand)
-                            ? "bg-primary/5 text-primary"
-                            : "hover:bg-muted"
-                        }`}
-                      >
-                        {brand}
-                        {selectedBrands.includes(brand) && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        )}
-                      </button>
-                    ))}
+                  <div className="max-h-64 overflow-y-auto p-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-accent/40 [&::-webkit-scrollbar-track]:bg-transparent">
+                    {loadingBrands ? (
+                      <div className="py-4 text-center text-xs text-muted-foreground animate-pulse">Cargando marcas...</div>
+                    ) : (
+                      brands.map((brand) => (
+                        <button
+                          key={brand}
+                          onClick={() => toggleBrand(brand)}
+                          className={`w-full text-left px-3 py-2.5 text-xs font-medium transition-colors border-b last:border-0 border-border/40 flex items-center justify-between ${
+                            selectedBrands.includes(brand)
+                              ? "bg-primary/5 text-primary"
+                              : "hover:bg-muted"
+                          }`}
+                        >
+                          {brand}
+                          {selectedBrands.includes(brand) && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                          )}
+                        </button>
+                      ))
+                    )}
                   </div>
-                  <div className="h-2 bg-muted/10 w-full" /> {/* Pequeo espaciador final */}
+                  <div className="h-2 bg-muted/10 w-full" />
                 </div>
               </>
             )}
           </div>
-          
+
+          {/* CONTADOR DE FILTROS ACTIVOS */}
           {activeFiltersCount > 0 && (
             <button
               onClick={clearAllBrands}
               className="group bg-accent hover:bg-accent/90 text-accent-foreground text-xs font-bold rounded-full h-9 px-4 flex items-center justify-center gap-2 flex-shrink-0 animate-in zoom-in shadow-md border border-white/20 transition-all hover:scale-105 active:scale-95"
             >
-              <span>{activeFiltersCount} {activeFiltersCount === 1 ? 'filtro' : 'filtros'}</span>
+              <span>{activeFiltersCount} {activeFiltersCount === 1 ? "filtro" : "filtros"}</span>
               <X className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
             </button>
           )}
         </div>
+
+        {/* BARRA DE BÚSQUEDA */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
