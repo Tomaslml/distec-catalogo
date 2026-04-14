@@ -83,6 +83,8 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
     setPromoOnly(false);
   };
 
+  const [showBrands, setShowBrands] = useState(false);
+
   const activeFiltersCount =
     (selectedBrands.length) +
     (promoOnly ? 1 : 0) +
@@ -91,8 +93,8 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
   return (
     <div id="productos" className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border py-4">
       <div className="container mx-auto px-4 space-y-4">
-        <div className="flex flex-wrap items-center gap-2 pb-1">
-          {/* BOTÓN OFERTAS DESTACADO */}
+        <div className="flex flex-wrap items-center gap-3 pb-1">
+          {/* BOTÓN OFERTAS (Lo mantenemos afuera para que destaque, pero agrupado si prefieres) */}
           <button
             onClick={handlePromoToggle}
             className={`whitespace-nowrap px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-sm border-2 transform hover:scale-105 active:scale-95 ${
@@ -105,38 +107,69 @@ export default function FilterBar({ products, onFilter, promoOnly, setPromoOnly 
             OFERTAS
           </button>
 
-          <div className="h-6 w-[1px] bg-border mx-1" />
+          <div className="h-6 w-[1px] bg-border mx-1 hidden sm:block" />
 
-          {/* BOTÓN TODAS */}
-          <button
-            onClick={clearAllBrands}
-            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors shadow-sm border ${
-              selectedBrands.length === 0 && !promoOnly
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
-            }`}
-          >
-            Todas
-          </button>
-
-          {/* BOTONES DE MARCAS */}
-          {brands.map((brand) => (
+          {/* BOTÓN DESPLEGABLE DE MARCAS */}
+          <div className="relative">
             <button
-              key={brand}
-              onClick={() => toggleBrand(brand)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm border ${
-                selectedBrands.includes(brand)
-                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/10"
-                  : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
+              onClick={() => setShowBrands(!showBrands)}
+              className={`whitespace-nowrap px-6 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-sm border-2 ${
+                selectedBrands.length > 0
+                  ? "bg-primary text-primary-foreground border-primary ring-2 ring-primary/20"
+                  : "bg-white text-foreground border-border hover:bg-muted"
               }`}
             >
-              {brand}
+              <span>Filtros de Marca</span>
+              {selectedBrands.length > 0 && (
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] ml-1">
+                  {selectedBrands.length}
+                </span>
+              )}
             </button>
-          ))}
+
+            {/* LISTA DESPLEGABLE (Dropdown) */}
+            {showBrands && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowBrands(false)} 
+                />
+                <div className="absolute left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <div className="p-2 border-b border-border bg-muted/30 flex items-center justify-between">
+                    <span className="text-xs font-bold px-2 text-muted-foreground uppercase tracking-wider">Marcas Disponibles</span>
+                    <button 
+                      onClick={clearAllBrands}
+                      className="text-[10px] font-black text-accent hover:underline px-2"
+                    >
+                      LIMPIAR
+                    </button>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto p-1">
+                    {brands.map((brand) => (
+                      <button
+                        key={brand}
+                        onClick={() => toggleBrand(brand)}
+                        className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b last:border-0 border-border/50 flex items-center justify-between group ${
+                          selectedBrands.includes(brand)
+                            ? "bg-primary/5 text-primary"
+                            : "hover:bg-muted"
+                        }`}
+                      >
+                        {brand}
+                        {selectedBrands.includes(brand) && (
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           
           {activeFiltersCount > 0 && (
-            <span className="bg-accent text-accent-foreground text-xs font-bold rounded-full min-w-6 h-6 px-1.5 flex items-center justify-center flex-shrink-0 animate-in zoom-in shadow-sm">
-              {activeFiltersCount}
+            <span className="bg-accent text-accent-foreground text-xs font-bold rounded-full h-8 px-4 flex items-center justify-center flex-shrink-0 animate-in zoom-in shadow-sm border border-white/20">
+              {activeFiltersCount} {activeFiltersCount === 1 ? 'filtro' : 'filtros'}
             </span>
           )}
         </div>

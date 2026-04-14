@@ -22,34 +22,37 @@ export function useSettings() {
   const [loading, setLoading] = useState(true);
 
   const fetchSettings = async () => {
-    setLoading(true);
+    // No ponemos loading(true) aqu si ya tenemos algo en localStorage para que no parpadee
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase
           .from(TABLE)
           .select("*")
           .eq("id", "config")
-          .single();
+          .limit(1);
 
-        if (data) {
-          setSettings(data.content as StoreSettings);
+        if (data && data.length > 0) {
+          const content = data[0].content as StoreSettings;
+          setSettings(content);
+          localStorage.setItem("distec_settings", JSON.stringify(content));
         } else if (!error) {
           await supabase.from(TABLE).insert({ id: "config", content: defaultSettings });
           setSettings(defaultSettings);
         }
       } catch (err) {
         console.error("Supabase settings fetch error:", err);
-        const stored = localStorage.getItem("distec_settings");
-        setSettings(stored ? JSON.parse(stored) : defaultSettings);
       }
-    } else {
-      const stored = localStorage.getItem("distec_settings");
-      setSettings(stored ? JSON.parse(stored) : defaultSettings);
     }
     setLoading(false);
   };
 
   useEffect(() => {
+    // Intentamos cargar de localStorage inmediatamente para que no tarde 8 segundos
+    const stored = localStorage.getItem("distec_settings");
+    if (stored) {
+      setSettings(JSON.parse(stored));
+      setLoading(false);
+    }
     fetchSettings();
   }, []);
 

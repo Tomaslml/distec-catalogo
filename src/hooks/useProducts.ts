@@ -25,7 +25,6 @@ export function useProducts() {
   const [loading, setLoading] = useState(true);
 
   const fetchProducts = async () => {
-    setLoading(true);
     if (isSupabaseConfigured) {
       try {
         const { data, error } = await supabase
@@ -36,17 +35,14 @@ export function useProducts() {
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-          setProducts([]);
-        } else {
-          setProducts(formatSupabaseProducts(data));
+        if (data) {
+          const formatted = formatSupabaseProducts(data);
+          setProducts(formatted || []);
+          localStorage.setItem("distec_products_cache", JSON.stringify(formatted));
         }
       } catch (err) {
         console.error("Supabase fetch error:", err);
-        setProducts(getLocalProducts());
       }
-    } else {
-      setProducts(getLocalProducts());
     }
     setLoading(false);
   };
@@ -68,6 +64,16 @@ export function useProducts() {
   }
 
   useEffect(() => {
+    // Intentamos cargar del cache inmediatamente
+    const cached = localStorage.getItem("distec_products_cache");
+    if (cached) {
+      try {
+        setProducts(JSON.parse(cached));
+        setLoading(false); // Ya no mostramos skeletons si hay cache
+      } catch (e) {
+        console.error("Cache parsing error", e);
+      }
+    }
     fetchProducts();
   }, []);
 
