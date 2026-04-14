@@ -118,16 +118,24 @@ export function useProducts() {
     await fetchProducts();
   };
 
-  const deleteProduct = async (id: string) => {
+  const updateProductOrder = async (orderedIds: { id: string, sort_order: number }[]) => {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from(TABLE).delete().eq("id", id);
+      // Usamos upsert para actualizar mltiples filas en una sola peticin
+      const { error } = await supabase
+        .from(TABLE)
+        .upsert(orderedIds, { onConflict: 'id' });
+      
       if (error) throw error;
     } else {
-      const all = getLocalProducts().filter((p) => p.id !== id);
-      saveLocalProducts(all);
+      const all = getLocalProducts();
+      const updated = all.map(p => {
+        const found = orderedIds.find(item => item.id === p.id);
+        return found ? { ...p, sortOrder: found.sort_order } : p;
+      });
+      saveLocalProducts(updated);
     }
     await fetchProducts();
   };
 
-  return { products, loading, addProduct, updateProduct, deleteProduct, refetch: fetchProducts };
+  return { products, loading, addProduct, updateProduct, deleteProduct, updateProductOrder, refetch: fetchProducts };
 }

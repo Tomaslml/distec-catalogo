@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import type { Product } from "@/lib/seedData";
 
 export default function AdminProducts() {
-  const { products, loading, deleteProduct, updateProduct } = useProducts();
+  const { products, loading, deleteProduct, updateProduct, updateProductOrder } = useProducts();
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
   const [isReorderMode, setIsReorderMode] = useState(false);
@@ -55,11 +55,14 @@ export default function AdminProducts() {
   const saveNewOrder = async () => {
     setSavingOrder(true);
     try {
-      // Solo actualizamos el sortOrder
-      const updates = orderedProducts.map((p, index) => 
-        updateProduct(p.id!, { sortOrder: index })
-      );
-      await Promise.all(updates);
+      // Preparamos los datos para una nica actualizacin masiva
+      const updates = orderedProducts.map((p, index) => ({
+        id: p.id!,
+        sort_order: index
+      }));
+      
+      await updateProductOrder(updates);
+      
       toast.success("✓ Orden guardado correctamente");
       setIsReorderMode(false);
     } catch (err) {
