@@ -159,7 +159,7 @@ export default function FilterBar({
                       LIMPIAR
                     </button>
                   </div>
-                  <div className="max-h-64 overflow-y-auto p-1 scrollbar-thin">
+                  <div className="max-h-64 overflow-y-auto p-1 scrollbar-thin scrollbar-thumb-accent/40 scrollbar-track-transparent hover:scrollbar-thumb-accent/60 pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-track]:bg-transparent">
                     {brands.map((brand) => (
                       <button
                         key={brand}
