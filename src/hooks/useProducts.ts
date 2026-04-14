@@ -131,12 +131,14 @@ export function useProducts() {
 
   const updateProductOrder = async (orderedIds: { id: string, sort_order: number }[]) => {
     if (isSupabaseConfigured) {
-      // Usamos upsert para actualizar mltiples filas en una sola peticin
-      const { error } = await supabase
-        .from(TABLE)
-        .upsert(orderedIds, { onConflict: 'id' });
+      // Usamos Promise.all con update para que sea rpido pero sin usar upsert (que puede fallar por RLS o falta de datos)
+      const updates = orderedIds.map(item => 
+        supabase.from(TABLE).update({ sort_order: item.sort_order }).eq("id", item.id)
+      );
       
-      if (error) throw error;
+      const results = await Promise.all(updates);
+      const firstError = results.find(r => r.error)?.error;
+      if (firstError) throw firstError;
     } else {
       const all = getLocalProducts();
       const updated = all.map(p => {
