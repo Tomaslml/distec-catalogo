@@ -25,8 +25,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isMaryBosques = /bosque/i.test(product.brand);
   const isPromoEligible = isProductEligibleForMaryBosquesPromo(product);
   
-  // Si es Mary Bosques pero no es de la promo, ignoramos su descuento individual para que no salga como oferta
-  const effectiveDiscountPrice = (isMaryBosques && !isPromoEligible) ? null : product.discountPrice;
+  // Usamos el precio de descuento del producto directamente
+  const effectiveDiscountPrice = product.discountPrice;
 
   const hasDiscount = effectiveDiscountPrice !== null && effectiveDiscountPrice < product.price;
   const discountPercent = hasDiscount

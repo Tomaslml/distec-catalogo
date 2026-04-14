@@ -29,7 +29,7 @@ export default function Hero({ onShowOffers }: HeroProps) {
             ⚡ OFERTA LIMITADA MARY BOSQUES ⚡
           </span>
           <span className="font-black text-xl md:text-3xl block mt-1">
-            ¡2 por $13.000!
+            ¡2 doypack por $13.000!
           </span>
           <span className="text-xs md:text-sm font-medium mt-2 block opacity-80 decoration-accent-foreground/50">
             Toca aquí para ver todas las ofertas
