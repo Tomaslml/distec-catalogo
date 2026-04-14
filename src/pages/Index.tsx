@@ -85,6 +85,27 @@ export default function Index() {
             ))}
           </div>
 
+        ) : loadingMore ? (
+          // Rueda de carga al seleccionar una marca
+          <div className="flex flex-col items-center py-16 gap-6">
+            <div className="loading-spinner" />
+            <p className="text-muted-foreground text-sm font-medium animate-pulse">
+              Cargando productos...
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full mt-2 opacity-40">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-muted" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3 bg-muted rounded w-1/3" />
+                    <div className="h-4 bg-muted rounded w-2/3" />
+                    <div className="h-9 bg-muted rounded w-full mt-2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         ) : displayProducts.length === 0 ? (
           <div className="text-center py-16">
             <span className="text-5xl mb-4 block">🔍</span>
