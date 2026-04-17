@@ -205,13 +205,31 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
                         <button onClick={() => removeItem(item.product.id!)} className="text-muted-foreground hover:text-destructive">
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        <div className="flex items-center gap-1 bg-muted rounded">
-                          <button onClick={() => updateQty(item.product.id!, item.qty - 1)} className="px-2 py-0.5 text-sm hover:bg-border rounded-l">
-                            <Minus className="w-3 h-3" />
+                        <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
+                          <button 
+                            onClick={() => {
+                              if (item.qty > 1) {
+                                updateQty(item.product.id!, item.qty - 1);
+                              } else {
+                                removeItem(item.product.id!);
+                              }
+                            }} 
+                            className="w-7 h-7 flex items-center justify-center hover:bg-background rounded-md transition-colors text-muted-foreground hover:text-destructive"
+                            title={item.qty === 1 ? "Quitar del carrito" : "Disminuir cantidad"}
+                          >
+                            {item.qty === 1 ? (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            ) : (
+                              <Minus className="w-3.5 h-3.5" />
+                            )}
                           </button>
-                          <span className="px-2 text-sm font-medium">{item.qty}</span>
-                          <button onClick={() => updateQty(item.product.id!, item.qty + 1)} className="px-2 py-0.5 text-sm hover:bg-border rounded-r">
-                            <Plus className="w-3 h-3" />
+                          <span className="w-6 text-center text-sm font-bold">{item.qty}</span>
+                          <button 
+                            onClick={() => updateQty(item.product.id!, item.qty + 1)} 
+                            className="w-7 h-7 flex items-center justify-center hover:bg-background rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                            title="Aumentar cantidad"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
                         <p className="text-xs text-muted-foreground">{formatPrice((item.product.discountPrice ?? item.product.price) * item.qty)}</p>

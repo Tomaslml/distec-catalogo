@@ -14,6 +14,7 @@ import ProductForm from "./pages/admin/ProductForm";
 import AdminOrders from "./pages/admin/Orders";
 import AdminSettings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
+import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <CartProvider>
+          <Analytics />
           <Sonner />
           <BrowserRouter>
             <Routes>
