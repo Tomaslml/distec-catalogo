@@ -14,7 +14,7 @@ import ProductForm from "./pages/admin/ProductForm";
 import AdminOrders from "./pages/admin/Orders";
 import AdminSettings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
-import { Analytics } from "@vercel/analytics/react";
+import PageTracker from "./components/PageTracker";
 
 const queryClient = new QueryClient();
 
@@ -23,9 +23,9 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <CartProvider>
-          <Analytics />
           <Sonner />
           <BrowserRouter>
+            <PageTracker />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -37,7 +37,6 @@ const App = () => (
                   </ProtectedRoute>
                 }
               >
-
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="products/new" element={<ProductForm />} />

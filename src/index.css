@@ -28,6 +28,8 @@
     --color-whatsapp: 142 70% 49%;
     --color-nuevo: 350 30% 59%;
     --color-discount: 16 44% 29%;
+    --color-visits: 28 30% 66%;
+    --color-orders: 350 30% 59%;
 
     --sidebar-background: 28 50% 95%;
     --sidebar-foreground: 18 40% 12%;
@@ -77,53 +79,3 @@
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
 }
-
-/* Loading Spinner */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid hsl(var(--accent) / 0.1);
-  border-left-color: hsl(var(--accent));
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.loading-logo {
-  animation: pulse-simple 2s ease-in-out infinite;
-}
-
-@keyframes pulse-simple {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(0.95); }
-}
-
-/* Scrollbar del filtro de marcas — funciona en todos los navegadores */
-.brand-scrollbar {
-  /* Firefox y Android Chrome moderno */
-  scrollbar-width: thin;
-  scrollbar-color: hsl(350 30% 59% / 0.5) transparent;
-  /* Indicador visual para iOS Safari (no soporta custom scrollbars) */
-  border-right: 2px solid hsl(350 30% 59% / 0.25);
-  padding-right: 4px;
-}
-
-/* Desktop Chrome / Edge / Safari desktop */
-.brand-scrollbar::-webkit-scrollbar {
-  width: 5px;
-}
-.brand-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.brand-scrollbar::-webkit-scrollbar-thumb {
-  background-color: hsl(350 30% 59% / 0.45);
-  border-radius: 99px;
-}
-.brand-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(350 30% 59% / 0.7);
-}
-
