@@ -1,94 +1,64 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, PlusCircle, ClipboardList, Settings, LogOut, Menu, X } from "lucide-react";
+import { Package, PlusCircle, ClipboardList, Settings, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 
 const links = [
+  { to: "/admin", icon: LayoutDashboard, label: "Panel de Control" },
   { to: "/admin/products", icon: Package, label: "Productos" },
   { to: "/admin/products/new", icon: PlusCircle, label: "Agregar producto" },
   { to: "/admin/orders", icon: ClipboardList, label: "Pedidos" },
   { to: "/admin/settings", icon: Settings, label: "Configuración" },
 ];
 
-export default function AdminLayout() {
-  const { user, logout } = useAuth();
+const AdminLayout = () => {
+  const { signOut } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleSignOut = async () => {
+    await signOut();
     navigate("/login");
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-foreground/30 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transition-transform lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-heading text-xl font-bold text-accent uppercase">Panel DISTEC</h2>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 hover:bg-muted rounded">
-            <X className="w-5 h-5" />
-          </button>
+    <div className="flex h-screen bg-background">
+      {/* Sidebar Desktop */}
+      <aside className="hidden md:flex w-64 flex-col bg-card border-r">
+        <div className="p-6">
+          <h2 className="text-xl font-bold tracking-tight text-primary font-heading">PANEL DISTEC</h2>
         </div>
-
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 px-4 space-y-2">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
-              end={link.to === "/admin/products"} // Solo match exacto para la lista de productos
-              onClick={() => setSidebarOpen(false)}
+              end={link.to === "/admin"}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted text-foreground"
                 }`
               }
             >
-              <link.icon className="w-4 h-4" />
-              {link.label}
+              <link.icon className="h-5 w-5" />
+              <span>{link.label}</span>
             </NavLink>
           ))}
         </nav>
-
-        <div className="p-3 border-t border-border">
+        <div className="p-4 border-t">
           <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 w-full transition-colors"
+            onClick={handleSignOut}
+            className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
-            Cerrar sesión
+            <LogOut className="h-5 w-5" />
+            <span>Cerrar sesión</span>
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-border flex items-center justify-between px-4 bg-card">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-1 hover:bg-muted rounded">
-              <Menu className="w-5 h-5" />
-            </button>
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user?.email || "admin@distec.com"}
-            </span>
-          </div>
-          <NavLink to="/" className="text-sm text-accent hover:underline">
-            Ver tienda →
-          </NavLink>
-        </header>
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
-          <Outlet />
-        </main>
-      </div>
+      <main className="flex-1 overflow-auto p-8"><Outlet /></main>
     </div>
   );
-}
+};
+
+export default AdminLayout;
