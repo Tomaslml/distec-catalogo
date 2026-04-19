@@ -20,13 +20,13 @@ export default function AdminDashboard() {
   const avgOrder = orders && orders.length > 0 ? totalRevenue / orders.length : 0;
   const fmt = (v: number) => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(v);
 
-  if (loading || !stats) return (<div className="p-8 text-muted-foreground">Cargando estadísticas...</div>);
+  if (loading || !stats) return (<div className="p-8 text-muted-foreground">Cargando estadÃ­sticas...</div>);
 
   return (
     <div className="space-y-6 pb-10">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Panel de Control</h1>
-        <p className="text-muted-foreground">Estadísticas de tráfico y ventas.</p>
+        <p className="text-muted-foreground">EstadÃ­sticas de trÃ¡fico y ventas.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-primary">
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
         </Card>
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Visitantes Únicos</CardTitle>
+            <CardTitle className="text-sm font-medium">Visitantes Ãšnicos</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold">{stats.uniqueVisitors}</div></CardContent>
