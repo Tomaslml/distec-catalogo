@@ -8,7 +8,7 @@ const links = [
   { to: "/admin/products", icon: Package, label: "Productos" },
   { to: "/admin/products/new", icon: PlusCircle, label: "Agregar producto" },
   { to: "/admin/orders", icon: ClipboardList, label: "Pedidos" },
-  { to: "/admin/settings", icon: Settings, label: "ConfiguraciÃ³n" },
+  { to: "/admin/settings", icon: Settings, label: "Configuración" },
 ];
 
 const AdminLayout = () => {
@@ -41,7 +41,7 @@ const AdminLayout = () => {
         <div className="p-4 border-t">
           <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-destructive hover:bg-destructive/10 transition-colors">
             <LogOut className="h-5 w-5" />
-            <span>Cerrar sesiÃ³n</span>
+            <span>Cerrar sesión</span>
           </button>
         </div>
       </aside>
