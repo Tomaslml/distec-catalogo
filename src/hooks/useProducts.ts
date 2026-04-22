@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Product } from "@/lib/seedData";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 48; // Aumentamos para traer "varios productos" de entrada
+const BACKGROUND_BATCH_SIZE = 50;
 const CACHE_KEY = "distec_products_cache";
 
 function formatSupabaseProducts(data: any[]): Product[] {
@@ -32,25 +33,54 @@ export function useProducts() {
   const pageRef = useRef(0);
   const allLoadedRef = useRef(false);
 
-  // Carga en segundo plano (silenciosa)
-  const backgroundLoadAll = useCallback(async () => {
+  // Carga en batches secuenciales (para no saturar con una sola peticin gigante)
+  const backgroundLoadAll = useCallback(async (startFrom: number) => {
     if (allLoadedRef.current) return;
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("sort_order", { ascending: true });
+    
+    let currentFrom = startFrom;
+    let finished = false;
 
-      if (error) throw error;
-      if (data) {
-        const formatted = formatSupabaseProducts(data);
-        setProducts(formatted);
-        saveCache(formatted);
-        setHasMore(false);
-        allLoadedRef.current = true;
-        pageRef.current = Math.ceil(formatted.length / PAGE_SIZE) - 1;
+    while (!finished) {
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .range(currentFrom, currentFrom + BACKGROUND_BATCH_SIZE - 1);
+
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const formatted = formatSupabaseProducts(data);
+          setProducts(prev => {
+            // Evitar duplicados por si acaso
+            const existingIds = new Set(prev.map(p => p.id));
+            const newOnes = formatted.filter(f => !existingIds.has(f.id));
+            const combined = [...prev, ...newOnes].sort((a, b) => a.sortOrder - b.sortOrder);
+            if (currentFrom === startFrom) saveCache(combined); // Guardar el primer set grande en cache
+            return combined;
+          });
+          
+          if (data.length < BACKGROUND_BATCH_SIZE) {
+            finished = true;
+            allLoadedRef.current = true;
+            setHasMore(false);
+          } else {
+            currentFrom += BACKGROUND_BATCH_SIZE;
+          }
+        } else {
+          finished = true;
+          allLoadedRef.current = true;
+          setHasMore(false);
+        }
+      } catch (err) {
+        console.error("Batch load error:", err);
+        finished = true; // Paramos si hay error crtico
       }
-    } catch {}
+      
+      // Pequea pausa entre batches para no bloquear el hilo principal
+      await new Promise(r => setTimeout(r, 100));
+    }
   }, []);
 
   // Carga inicial: muestra cache instantáneamente y luego refresca
@@ -71,7 +101,7 @@ export function useProducts() {
         }
       } catch {}
 
-      // 2. Cargar primera página de Supabase (o refrescar si hay cache)
+      // 2. Cargar primera página GRANDE de Supabase
       try {
         const { data, error } = await supabase
           .from("products")
@@ -86,10 +116,9 @@ export function useProducts() {
           
           setProducts(prev => {
             if (hasCachedData) {
-               // Si tenemos caché, combinamos los nuevos con el resto del caché
-               // Evitamos duplicados si el primer lote ya estaba
-               const otherProducts = prev.slice(PAGE_SIZE);
-               return [...formatted, ...otherProducts];
+               // Combinamos el primer lote fresco con el resto del cach
+               const otherProducts = prev.filter(p => !formatted.some(f => f.id === p.id));
+               return [...formatted, ...otherProducts].sort((a, b) => a.sortOrder - b.sortOrder);
             }
             return formatted;
           });
@@ -97,16 +126,19 @@ export function useProducts() {
           if (!hasCachedData) saveCache(formatted);
           pageRef.current = 0;
           setHasMore(data.length === PAGE_SIZE);
+          
+          // 3. Lanzar carga del resto en BATCHES secuenciales (si haba ms de PAGE_SIZE)
+          if (data.length === PAGE_SIZE) {
+            backgroundLoadAll(PAGE_SIZE);
+          } else {
+            allLoadedRef.current = true;
+            setHasMore(false);
+          }
         }
       } catch (err) {
         console.error("Error cargando productos:", err);
       } finally {
         setLoading(false);
-      }
-
-      // 3. Carga silenciosa del resto en segundo plano
-      if (!allLoadedRef.current) {
-        setTimeout(() => backgroundLoadAll(), 500);
       }
     };
 
@@ -114,6 +146,7 @@ export function useProducts() {
   }, [backgroundLoadAll]);
 
   const loadMore = useCallback(async () => {
+    // Si ya estamos cargando en segundo plano, no hacemos nada extra
     if (loadingMore || !hasMore || allLoadedRef.current) return;
     setLoadingMore(true);
 
@@ -149,27 +182,8 @@ export function useProducts() {
 
   const loadAll = useCallback(async () => {
     if (allLoadedRef.current || loadingMore) return;
-    setLoadingMore(true);
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("sort_order", { ascending: true });
-
-      if (error) throw error;
-
-      if (data) {
-        const formatted = formatSupabaseProducts(data);
-        setProducts(formatted);
-        saveCache(formatted);
-        setHasMore(false);
-        allLoadedRef.current = true;
-      }
-    } catch (err) {
-      console.error("Error cargando todos los productos:", err);
-    } finally {
-      setLoadingMore(false);
-    }
+    // Si el usuario fuerza cargar todo (por filtro), simplemente dejamos que el background haga su trabajo 
+    // o aceleramos si es necesario. Por ahora, el backgroundLoadAll secuencial es lo mejor.
   }, [loadingMore]);
 
   const addProduct = async (data: Omit<Product, "id" | "createdAt" | "sortOrder">) => {
