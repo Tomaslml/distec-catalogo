@@ -19,21 +19,27 @@ export default function Migration() {
     setLog(["Iniciando migración..."]);
     
     try {
-      // 1. Asegurar bucket
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const exists = buckets?.find(b => b.name === BUCKET_NAME);
-      if (!exists) {
-        addLog(`Creando bucket "${BUCKET_NAME}"...`);
-        const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-          public: true,
-        });
-        if (createError) {
-          addLog(`Error creando bucket: ${createError.message}`);
-          throw createError;
+      // 1. Intentar asegurar bucket (si falla por RLS, seguimos adelante asumiendo que el usuario lo creó)
+      addLog(`Verificando bucket "${BUCKET_NAME}"...`);
+      try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const exists = buckets?.find(b => b.name === BUCKET_NAME);
+        if (!exists) {
+          addLog(`Intentando crear bucket "${BUCKET_NAME}"...`);
+          const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+            public: true,
+          });
+          if (createError) {
+            addLog(`Aviso: No se pudo crear el bucket automáticamente (${createError.message}).`);
+            addLog(`Asegurate de haberlo creado manualmente en el dashboard de Supabase como PUBLIC.`);
+          } else {
+            addLog("Bucket creado exitosamente.");
+          }
+        } else {
+          addLog(`El bucket "${BUCKET_NAME}" ya existe.`);
         }
-        addLog("Bucket creado.");
-      } else {
-        addLog(`Bucket "${BUCKET_NAME}" ya existe.`);
+      } catch (e) {
+        addLog("Aviso: No se pudo verificar el bucket. Procediendo de todas formas...");
       }
 
       // 2. Traer productos
