@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Loader2, Upload, X, ImagePlus } from "lucide-react";
 
@@ -85,18 +86,36 @@ export default function ProductForm() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit for base64
-        toast.error("La imagen es muy pesada (máx 1MB)");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      await uploadImage(file);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    setSaving(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      setImageUrl(publicUrl);
+      toast.success("Imagen subida correctamente");
+    } catch (error: any) {
+      toast.error("Error al subir imagen: " + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -104,19 +123,11 @@ export default function ProductForm() {
     e.preventDefault();
   };
 
-  const onDrop = (e: React.DragEvent) => {
+  const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) {
-        toast.error("La imagen es muy pesada (máx 1MB)");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      await uploadImage(file);
     }
   };
 

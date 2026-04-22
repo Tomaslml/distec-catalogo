@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, PlusCircle, ClipboardList, Settings, LogOut, LayoutDashboard } from "lucide-react";
+import { Package, PlusCircle, ClipboardList, Settings, LogOut, LayoutDashboard, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 const links = [
@@ -9,6 +9,7 @@ const links = [
   { to: "/admin/products/new", icon: PlusCircle, label: "Agregar producto" },
   { to: "/admin/orders", icon: ClipboardList, label: "Pedidos" },
   { to: "/admin/settings", icon: Settings, label: "Configuración" },
+  { to: "/admin/migration", icon: RefreshCw, label: "Migrar Imágenes" },
 ];
 
 const AdminLayout = () => {
