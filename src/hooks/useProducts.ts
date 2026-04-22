@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Product } from "@/lib/seedData";
 
-const PAGE_SIZE = 40; 
+const PAGE_SIZE = 12; 
 const BATCH_SIZE = 50;
 const CACHE_KEY = "distec_products_cache";
 
