@@ -18,7 +18,7 @@ function formatSupabaseProducts(data: any[]): Product[] {
 
 function saveCache(products: Product[]) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(products.slice(0, 48)));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(products.slice(0, 100)));
   } catch {
     try { localStorage.removeItem(CACHE_KEY); } catch {}
   }
@@ -30,10 +30,9 @@ export function useProducts() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const pageRef = useRef(0);
-
   const allLoadedRef = useRef(false);
 
-  // Carga en segundo plano (silenciosa, sin spinner)
+  // Carga en segundo plano (silenciosa)
   const backgroundLoadAll = useCallback(async () => {
     if (allLoadedRef.current) return;
     try {
@@ -57,6 +56,8 @@ export function useProducts() {
   // Carga inicial: muestra cache instantáneamente y luego refresca
   useEffect(() => {
     const init = async () => {
+      let hasCachedData = false;
+      
       // 1. Mostrar caché inmediatamente
       try {
         const cached = localStorage.getItem(CACHE_KEY);
@@ -65,16 +66,12 @@ export function useProducts() {
           if (Array.isArray(parsed) && parsed.length > 0) {
             setProducts(parsed);
             setLoading(false);
-            // Si el caché tiene todos los productos, no re-cargar
-            if (parsed.length >= PAGE_SIZE * 2) {
-              allLoadedRef.current = true;
-              setHasMore(false);
-            }
+            hasCachedData = true;
           }
         }
       } catch {}
 
-      // 2. Cargar primera página de Supabase
+      // 2. Cargar primera página de Supabase (o refrescar si hay cache)
       try {
         const { data, error } = await supabase
           .from("products")
@@ -86,8 +83,18 @@ export function useProducts() {
 
         if (data) {
           const formatted = formatSupabaseProducts(data);
-          setProducts(formatted);
-          saveCache(formatted);
+          
+          setProducts(prev => {
+            if (hasCachedData) {
+               // Si tenemos caché, combinamos los nuevos con el resto del caché
+               // Evitamos duplicados si el primer lote ya estaba
+               const otherProducts = prev.slice(PAGE_SIZE);
+               return [...formatted, ...otherProducts];
+            }
+            return formatted;
+          });
+          
+          if (!hasCachedData) saveCache(formatted);
           pageRef.current = 0;
           setHasMore(data.length === PAGE_SIZE);
         }
@@ -97,18 +104,17 @@ export function useProducts() {
         setLoading(false);
       }
 
-      // 3. Carga silenciosa del resto en segundo plano (después de 2 segundos)
+      // 3. Carga silenciosa del resto en segundo plano
       if (!allLoadedRef.current) {
-        setTimeout(() => backgroundLoadAll(), 2000);
+        setTimeout(() => backgroundLoadAll(), 500);
       }
     };
 
     init();
   }, [backgroundLoadAll]);
 
-  // Cargar más productos (para el botón "Ver más")
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore || allLoadedRef.current) return;
     setLoadingMore(true);
 
     try {
@@ -141,7 +147,6 @@ export function useProducts() {
     }
   }, [loadingMore, hasMore]);
 
-  // Carga TODOS los productos (usada cuando se activa un filtro o búsqueda)
   const loadAll = useCallback(async () => {
     if (allLoadedRef.current || loadingMore) return;
     setLoadingMore(true);
@@ -167,13 +172,59 @@ export function useProducts() {
     }
   }, [loadingMore]);
 
+  const addProduct = async (data: Omit<Product, "id" | "createdAt" | "sortOrder">) => {
+    const { data: lastProduct } = await supabase
+      .from("products")
+      .select("sort_order")
+      .order("sort_order", { ascending: false })
+      .limit(1);
+    
+    const nextSortOrder = lastProduct && lastProduct.length > 0 
+      ? (lastProduct[0].sort_order + 1) 
+      : 0;
+
+    const { data: result, error } = await supabase
+      .from("products")
+      .insert([{ ...data, sort_order: nextSortOrder }])
+      .select();
+
+    if (error) throw error;
+    if (result) {
+      const formatted = formatSupabaseProducts(result)[0];
+      setProducts(prev => [...prev, formatted]);
+    }
+  };
+
+  const updateProduct = async (id: string, data: Partial<Product>) => {
+    const dbData: any = { ...data };
+    if (data.isNew !== undefined) { dbData.is_new = data.isNew; delete dbData.isNew; }
+    if (data.discountPrice !== undefined) { dbData.discount_price = data.discountPrice; delete dbData.discountPrice; }
+    if (data.imageUrl !== undefined) { dbData.image_url = data.imageUrl; delete dbData.image_url; }
+    if (data.sortOrder !== undefined) { dbData.sort_order = data.sortOrder; delete dbData.sortOrder; }
+
+    const { error } = await supabase.from("products").update(dbData).eq("id", id);
+    if (error) throw error;
+    
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  };
+
   const updateProductOrder = async (orderedIds: { id: string; sort_order: number }[]) => {
-    const updates = orderedIds.map(item =>
-      supabase.from("products").update({ sort_order: item.sort_order }).eq("id", item.id)
-    );
-    const results = await Promise.all(updates);
-    const firstError = results.find(r => r.error)?.error;
-    if (firstError) throw firstError;
+    const { error } = await supabase
+      .from("products")
+      .upsert(orderedIds);
+    
+    if (error) throw error;
+    
+    setProducts(prev => {
+      const newProducts = [...prev];
+      orderedIds.forEach(update => {
+        const index = newProducts.findIndex(p => p.id === update.id);
+        if (index !== -1) {
+          newProducts[index] = { ...newProducts[index], sortOrder: update.sort_order };
+        }
+      });
+      return newProducts.sort((a, b) => a.sortOrder - b.sortOrder);
+    });
   };
 
   const deleteProduct = async (id: string) => {
@@ -182,5 +233,16 @@ export function useProducts() {
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  return { products, loading, loadingMore, hasMore, loadMore, loadAll, updateProductOrder, deleteProduct };
+  return { 
+    products, 
+    loading, 
+    loadingMore, 
+    hasMore, 
+    loadMore, 
+    loadAll, 
+    addProduct,
+    updateProduct,
+    updateProductOrder, 
+    deleteProduct 
+  };
 }

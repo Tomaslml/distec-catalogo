@@ -35,26 +35,10 @@ export default function Index() {
   };
 
   const displayProducts = filtered;
-  const isInitialLoading = loading && products.length === 0;
+  const showInitialSkeletons = loading && products.length === 0;
 
   return (
     <div className="min-h-screen flex flex-col">
-
-      {/* RUEDA DE CARGA */}
-      {isInitialLoading && (
-        <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center animate-in fade-in duration-300">
-          <div className="flex flex-col items-center gap-4">
-            <div className="loading-spinner" />
-            <h1 className="font-heading text-4xl font-bold text-accent uppercase tracking-widest">
-              Distec
-            </h1>
-            <p className="text-muted-foreground text-sm font-medium animate-pulse">
-              Sintonizando tu belleza...
-            </p>
-          </div>
-        </div>
-      )}
-
       <StoreHeader />
       <Hero onShowOffers={handleShowOffers} />
       <FilterBar
@@ -69,8 +53,7 @@ export default function Index() {
 
       <main id="productos" className="container mx-auto px-4 py-6 flex-1">
 
-        {/* Skeletons mientras carga */}
-        {isInitialLoading ? (
+        {showInitialSkeletons ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
@@ -85,28 +68,15 @@ export default function Index() {
             ))}
           </div>
 
-        ) : loadingMore ? (
-          // Rueda de carga al seleccionar una marca
+        ) : (loadingMore && products.length === 0) ? (
           <div className="flex flex-col items-center py-16 gap-6">
             <div className="loading-spinner" />
             <p className="text-muted-foreground text-sm font-medium animate-pulse">
               Cargando productos...
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full mt-2 opacity-40">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
-                  <div className="aspect-square bg-muted" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3 bg-muted rounded w-1/3" />
-                    <div className="h-4 bg-muted rounded w-2/3" />
-                    <div className="h-9 bg-muted rounded w-full mt-2" />
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
-        ) : displayProducts.length === 0 ? (
+        ) : (displayProducts.length === 0 && !loading) ? (
           <div className="text-center py-16">
             <span className="text-5xl mb-4 block">🔍</span>
             <p className="text-muted-foreground text-lg font-medium">No se encontraron productos</p>
@@ -142,7 +112,7 @@ export default function Index() {
             )}
 
             {/* Skeletons de carga adicional */}
-            {loadingMore && (
+            {loadingMore && products.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
