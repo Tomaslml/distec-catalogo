@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Product } from "@/lib/seedData";
 
-const PAGE_SIZE = 48; // Aumentamos para traer "varios productos" de entrada
-const BACKGROUND_BATCH_SIZE = 50;
+const PAGE_SIZE = 40; 
+const BATCH_SIZE = 50;
 const CACHE_KEY = "distec_products_cache";
 
 function formatSupabaseProducts(data: any[]): Product[] {
@@ -33,57 +33,55 @@ export function useProducts() {
   const pageRef = useRef(0);
   const allLoadedRef = useRef(false);
 
-  // Carga en batches secuenciales (para no saturar con una sola peticin gigante)
-  const backgroundLoadAll = useCallback(async (startFrom: number) => {
+  // Carga TODO en batches PARALELOS (mucho más rápido que secuencial)
+  const fetchAllInBatches = useCallback(async (totalCount: number) => {
     if (allLoadedRef.current) return;
-    
-    let currentFrom = startFrom;
-    let finished = false;
 
-    while (!finished) {
-      try {
-        const { data, error } = await supabase
+    // Calculamos los rangos de todos los batches que faltan (empezando desde el primer batch cargado)
+    const ranges: { from: number; to: number }[] = [];
+    for (let from = PAGE_SIZE; from < totalCount; from += BATCH_SIZE) {
+      ranges.push({ from, to: Math.min(from + BATCH_SIZE - 1, totalCount - 1) });
+    }
+
+    if (ranges.length === 0) {
+      allLoadedRef.current = true;
+      setHasMore(false);
+      return;
+    }
+
+    try {
+      // Disparamos TODAS las peticiones en paralelo (Batch Fetching real)
+      const promises = ranges.map(range => 
+        supabase
           .from("products")
           .select("*")
           .order("sort_order", { ascending: true })
-          .range(currentFrom, currentFrom + BACKGROUND_BATCH_SIZE - 1);
+          .range(range.from, range.to)
+      );
 
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          const formatted = formatSupabaseProducts(data);
-          setProducts(prev => {
-            // Evitar duplicados por si acaso
-            const existingIds = new Set(prev.map(p => p.id));
-            const newOnes = formatted.filter(f => !existingIds.has(f.id));
-            const combined = [...prev, ...newOnes].sort((a, b) => a.sortOrder - b.sortOrder);
-            if (currentFrom === startFrom) saveCache(combined); // Guardar el primer set grande en cache
-            return combined;
-          });
-          
-          if (data.length < BACKGROUND_BATCH_SIZE) {
-            finished = true;
-            allLoadedRef.current = true;
-            setHasMore(false);
-          } else {
-            currentFrom += BACKGROUND_BATCH_SIZE;
-          }
-        } else {
-          finished = true;
-          allLoadedRef.current = true;
-          setHasMore(false);
-        }
-      } catch (err) {
-        console.error("Batch load error:", err);
-        finished = true; // Paramos si hay error crtico
-      }
+      const results = await Promise.all(promises);
       
-      // Pequea pausa entre batches para no bloquear el hilo principal
-      await new Promise(r => setTimeout(r, 100));
+      const allNewProducts: Product[] = [];
+      results.forEach(res => {
+        if (res.data) {
+          allNewProducts.push(...formatSupabaseProducts(res.data));
+        }
+      });
+
+      setProducts(prev => {
+        const combined = [...prev, ...allNewProducts].sort((a, b) => a.sortOrder - b.sortOrder);
+        saveCache(combined);
+        return combined;
+      });
+
+      allLoadedRef.current = true;
+      setHasMore(false);
+    } catch (err) {
+      console.error("Parallel batch fetch error:", err);
     }
   }, []);
 
-  // Carga inicial: muestra cache instantáneamente y luego refresca
+  // Carga inicial
   useEffect(() => {
     const init = async () => {
       let hasCachedData = false;
@@ -101,22 +99,26 @@ export function useProducts() {
         }
       } catch {}
 
-      // 2. Cargar primera página GRANDE de Supabase
+      // 2. Obtener primer batch Y el conteo total simultáneamente
       try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .order("sort_order", { ascending: true })
-          .range(0, PAGE_SIZE - 1);
+        const [firstPageRes, countRes] = await Promise.all([
+          supabase
+            .from("products")
+            .select("*")
+            .order("sort_order", { ascending: true })
+            .range(0, PAGE_SIZE - 1),
+          supabase
+            .from("products")
+            .select("id", { count: 'exact', head: true })
+        ]);
 
-        if (error) throw error;
+        if (firstPageRes.error) throw firstPageRes.error;
 
-        if (data) {
-          const formatted = formatSupabaseProducts(data);
+        if (firstPageRes.data) {
+          const formatted = formatSupabaseProducts(firstPageRes.data);
           
           setProducts(prev => {
             if (hasCachedData) {
-               // Combinamos el primer lote fresco con el resto del cach
                const otherProducts = prev.filter(p => !formatted.some(f => f.id === p.id));
                return [...formatted, ...otherProducts].sort((a, b) => a.sortOrder - b.sortOrder);
             }
@@ -125,11 +127,11 @@ export function useProducts() {
           
           if (!hasCachedData) saveCache(formatted);
           pageRef.current = 0;
-          setHasMore(data.length === PAGE_SIZE);
           
-          // 3. Lanzar carga del resto en BATCHES secuenciales (si haba ms de PAGE_SIZE)
-          if (data.length === PAGE_SIZE) {
-            backgroundLoadAll(PAGE_SIZE);
+          // 3. Si hay más productos, cargarlos todos en batches paralelos
+          const totalCount = countRes.count || 0;
+          if (totalCount > PAGE_SIZE) {
+            fetchAllInBatches(totalCount);
           } else {
             allLoadedRef.current = true;
             setHasMore(false);
@@ -143,48 +145,16 @@ export function useProducts() {
     };
 
     init();
-  }, [backgroundLoadAll]);
+  }, [fetchAllInBatches]);
 
   const loadMore = useCallback(async () => {
-    // Si ya estamos cargando en segundo plano, no hacemos nada extra
     if (loadingMore || !hasMore || allLoadedRef.current) return;
-    setLoadingMore(true);
-
-    try {
-      const nextPage = pageRef.current + 1;
-      const from = nextPage * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("sort_order", { ascending: true })
-        .range(from, to);
-
-      if (error) throw error;
-
-      if (data) {
-        const formatted = formatSupabaseProducts(data);
-        setProducts(prev => {
-          const combined = [...prev, ...formatted];
-          saveCache(combined);
-          return combined;
-        });
-        pageRef.current = nextPage;
-        setHasMore(data.length === PAGE_SIZE);
-      }
-    } catch (err) {
-      console.error("Error cargando más productos:", err);
-    } finally {
-      setLoadingMore(false);
-    }
+    // La carga paralela ya se encarga de todo, este botón solo es fallback o para casos manuales
   }, [loadingMore, hasMore]);
 
   const loadAll = useCallback(async () => {
-    if (allLoadedRef.current || loadingMore) return;
-    // Si el usuario fuerza cargar todo (por filtro), simplemente dejamos que el background haga su trabajo 
-    // o aceleramos si es necesario. Por ahora, el backgroundLoadAll secuencial es lo mejor.
-  }, [loadingMore]);
+    // Ya implementado vía fetchAllInBatches en init
+  }, []);
 
   const addProduct = async (data: Omit<Product, "id" | "createdAt" | "sortOrder">) => {
     const { data: lastProduct } = await supabase
