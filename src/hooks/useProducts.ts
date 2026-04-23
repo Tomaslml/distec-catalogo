@@ -167,9 +167,22 @@ export function useProducts() {
       ? (lastProduct[0].sort_order + 1) 
       : 0;
 
+    // Convert camelCase to snake_case for Supabase
+    const dbData: any = {
+      name: data.name,
+      brand: data.brand,
+      price: data.price,
+      discount_price: data.discountPrice,
+      description: data.description,
+      image_url: data.imageUrl,
+      emoji: data.emoji,
+      is_new: data.isNew,
+      sort_order: nextSortOrder,
+    };
+
     const { data: result, error } = await supabase
       .from("products")
-      .insert([{ ...data, sort_order: nextSortOrder }])
+      .insert([dbData])
       .select();
 
     if (error) throw error;
@@ -183,7 +196,8 @@ export function useProducts() {
     const dbData: any = { ...data };
     if (data.isNew !== undefined) { dbData.is_new = data.isNew; delete dbData.isNew; }
     if (data.discountPrice !== undefined) { dbData.discount_price = data.discountPrice; delete dbData.discountPrice; }
-    if (data.imageUrl !== undefined) { dbData.image_url = data.imageUrl; delete dbData.image_url; }
+    if (data.imageUrl !== undefined) { dbData.image_url = data.imageUrl; delete dbData.imageUrl; }
+    if (dbData.image_url === undefined) delete dbData.image_url;
     if (data.sortOrder !== undefined) { dbData.sort_order = data.sortOrder; delete dbData.sortOrder; }
 
     const { error } = await supabase.from("products").update(dbData).eq("id", id);
