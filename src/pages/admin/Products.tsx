@@ -67,7 +67,7 @@ export default function AdminProducts() {
       setIsReorderMode(false);
     } catch (err) {
       console.error("Error saving order:", err);
-      toast.error("Error al guardar el orden. ¿Agregaste la columna 'sort_order' en Supabase?");
+      toast.error("Error al guardar el orden: " + (err instanceof Error ? err.message : "Error desconocido"));
     } finally {
       setSavingOrder(false);
     }

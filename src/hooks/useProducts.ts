@@ -207,11 +207,18 @@ export function useProducts() {
   };
 
   const updateProductOrder = async (orderedIds: { id: string; sort_order: number }[]) => {
-    const { error } = await supabase
-      .from("products")
-      .upsert(orderedIds);
-    
-    if (error) throw error;
+    // Actualizamos cada producto individualmente en paralelo (upsert falla con campos required)
+    const results = await Promise.all(
+      orderedIds.map(({ id, sort_order }) =>
+        supabase
+          .from("products")
+          .update({ sort_order })
+          .eq("id", id)
+      )
+    );
+
+    const firstError = results.find(r => r.error);
+    if (firstError?.error) throw firstError.error;
     
     setProducts(prev => {
       const newProducts = [...prev];
