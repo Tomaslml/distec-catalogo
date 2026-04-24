@@ -2,7 +2,7 @@ import { X, Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useSettings } from "@/hooks/useSettings";
 import { useOrders } from "@/hooks/useOrders";
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export default function CartPanel() {
@@ -12,6 +12,24 @@ export default function CartPanel() {
   const [couponInput, setCouponInput] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError] = useState(false);
+  const pendingClear = useRef(false);
+
+  // Cuando el usuario vuelve de WhatsApp, limpiamos el carrito
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && pendingClear.current) {
+        pendingClear.current = false;
+        toast.success("¡Pedido enviado por WhatsApp!");
+        clearCart();
+        setIsOpen(false);
+        setCouponApplied(false);
+        setCouponInput("");
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [clearCart, setIsOpen]);
 
   if (!isOpen) return null;
 
@@ -115,13 +133,12 @@ ${paymentMethods.map((m) => `- ${m}`).join("\n")}
 
     const phone = settings.whatsappNumber;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(orderMessage)}`;
-    window.open(url, "_blank");
 
-    toast.success("¡Pedido enviado por WhatsApp!");
-    clearCart();
-    setIsOpen(false);
-    setCouponApplied(false);
-    setCouponInput("");
+    // Marcamos que hay un pedido pendiente de confirmar
+    pendingClear.current = true;
+
+    // Usamos location.href en lugar de window.open para evitar el bloqueo de pop-ups en celulares
+    window.location.href = url;
   };
 
   return (
