@@ -21,12 +21,17 @@ export default function AdminProducts() {
     }
   }, [products, isReorderMode]);
 
+  // Aseguramos que no haya duplicados visuales por errores de estado
+  const uniqueOrderedProducts = Array.from(
+    new Map(orderedProducts.map((p) => [p.id, p])).values()
+  );
+
   const filtered = isReorderMode 
-    ? orderedProducts 
-    : orderedProducts.filter(
+    ? uniqueOrderedProducts 
+    : uniqueOrderedProducts.filter(
         (p) =>
           p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.brand.toLowerCase().includes(search.toLowerCase())
+          (p.brand && p.brand.toLowerCase().includes(search.toLowerCase()))
       );
 
   const onDragStart = (e: React.DragEvent, index: number) => {
