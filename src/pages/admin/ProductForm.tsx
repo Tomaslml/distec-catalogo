@@ -21,9 +21,10 @@ export default function ProductForm() {
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (isEdit && products.length > 0) {
+    if (isEdit && products.length > 0 && !initializedRef.current) {
       const p = products.find((p) => p.id === id);
       if (p) {
         setName(p.name);
@@ -34,6 +35,7 @@ export default function ProductForm() {
         setImageUrl(p.imageUrl);
         setEmoji(p.emoji);
         setIsNew(p.isNew);
+        initializedRef.current = true;
       }
     }
   }, [isEdit, id, products]);
