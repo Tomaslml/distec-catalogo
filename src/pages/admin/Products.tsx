@@ -74,11 +74,21 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar "${name}"?`)) return;
-    setDeleting(id);
-    await deleteProduct(id);
-    toast.success("Producto eliminado");
-    setDeleting(null);
+    console.log("Intentando borrar producto:", id, name);
+    // Usamos una confirmación más simple por si el navegador bloquea confirm()
+    const response = window.confirm(`¿Estás seguro de que quieres eliminar "${name}"?`);
+    if (!response) return;
+
+    try {
+      setDeleting(id);
+      await deleteProduct(id);
+      toast.success("Producto eliminado correctamente");
+    } catch (err: any) {
+      console.error("Error al borrar:", err);
+      toast.error("No se pudo borrar: " + (err.message || "Error desconocido"));
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const formatPrice = (n: number) => "$" + n.toLocaleString("es-AR");
