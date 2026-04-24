@@ -73,12 +73,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
 
         <DialogTrigger className="text-left w-full focus:outline-none flex flex-col flex-grow">
-          <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden w-full relative">
+          <div className="aspect-square bg-white flex items-center justify-center overflow-hidden w-full relative">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 p-2"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
@@ -142,7 +142,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <DialogContent className="sm:max-w-[600px] w-[95vw] overflow-hidden p-0 border-0 bg-background max-h-[90vh] flex flex-col rounded-xl z-50">
         <div className="overflow-y-auto w-full block">
-          <div className="aspect-[4/3] bg-muted flex items-center justify-center w-full relative sm:aspect-[16/9]">
+          <div className="aspect-[4/3] bg-white flex items-center justify-center w-full relative sm:aspect-[16/9]">
             {product.isNew && (
               <span className="absolute top-4 left-4 z-10 bg-nuevo text-accent-foreground text-sm font-bold px-3 py-1 rounded">
                 NUEVO
@@ -158,7 +158,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <img
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-contain p-4"
+                className="w-full h-full object-cover"
                 loading="lazy"
               />
             ) : (
