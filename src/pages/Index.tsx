@@ -15,6 +15,8 @@ export default function Index() {
   const [promoOnly, setPromoOnly] = useState(false);
   const [maryBosquesOnly, setMaryBosquesOnly] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [showLoading, setShowLoading] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
 
   const handleFilter = useCallback((result: Product[]) => {
     setFiltered(result);
@@ -28,6 +30,15 @@ export default function Index() {
     }
   }, [promoOnly, maryBosquesOnly]);
 
+  // Fade out de la pantalla de carga cuando los productos están listos
+  useEffect(() => {
+    if (!loading && products.length > 0 && showLoading) {
+      setFadeOut(true);
+      const timer = setTimeout(() => setShowLoading(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, products.length, showLoading]);
+
   const handleShowOffers = () => {
     setMaryBosquesOnly(true);
     setPromoOnly(false);
@@ -35,10 +46,20 @@ export default function Index() {
   };
 
   const displayProducts = filtered;
-  const showInitialSkeletons = loading && products.length === 0;
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Pantalla de carga — Sintonizando tu belleza */}
+      {showLoading && (
+        <div className={`loading-screen${fadeOut ? " fade-out" : ""}`}>
+          <p className="font-heading text-3xl font-bold text-primary tracking-wide mb-6">DISTEC</p>
+          <div className="loading-spinner-ring" />
+          <p className="loading-text">
+            Sintonizando tu belleza<span className="loading-dots"></span>
+          </p>
+        </div>
+      )}
+
       <StoreHeader />
       <Hero onShowOffers={handleShowOffers} />
       <FilterBar
@@ -53,7 +74,7 @@ export default function Index() {
 
       <main id="productos" className="container mx-auto px-4 py-6 flex-1">
 
-        {showInitialSkeletons ? (
+        {(loading && products.length === 0 && !showLoading) ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
@@ -66,14 +87,6 @@ export default function Index() {
                 </div>
               </div>
             ))}
-          </div>
-
-        ) : (loadingMore && products.length === 0) ? (
-          <div className="flex flex-col items-center py-16 gap-6">
-            <div className="loading-spinner" />
-            <p className="text-muted-foreground text-sm font-medium animate-pulse">
-              Cargando productos...
-            </p>
           </div>
 
         ) : (displayProducts.length === 0 && !loading) ? (

@@ -79,3 +79,89 @@
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out;
 }
+
+/* Loading screen — "Sintonizando tu belleza" */
+@keyframes spin-loading {
+  to { transform: rotate(360deg); }
+}
+@keyframes spin-loading-reverse {
+  to { transform: rotate(-360deg); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: hsl(28 60% 97%);
+  transition: opacity 0.5s ease-out;
+}
+.loading-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-spinner-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.loading-spinner-ring::before,
+.loading-spinner-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+}
+.loading-spinner-ring::before {
+  border-top-color: hsl(350 30% 59%);
+  border-right-color: hsl(350 30% 59%);
+  animation: spin-loading 1s ease-in-out infinite;
+}
+.loading-spinner-ring::after {
+  inset: 6px;
+  border-bottom-color: hsl(16 44% 29%);
+  border-left-color: hsl(16 44% 29%);
+  animation: spin-loading-reverse 1.4s ease-in-out infinite;
+}
+
+.loading-text {
+  margin-top: 1.5rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  background: linear-gradient(90deg, hsl(18 20% 40%), hsl(350 30% 59%), hsl(16 44% 29%), hsl(18 20% 40%));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fade-in-up 0.6s ease-out 0.2s both, shimmer 3s linear infinite;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}
