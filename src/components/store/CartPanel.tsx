@@ -2,7 +2,7 @@ import { X, Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useSettings } from "@/hooks/useSettings";
 import { useOrders } from "@/hooks/useOrders";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 export default function CartPanel() {
