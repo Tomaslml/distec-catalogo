@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   }, []);
 
   const handleCleanup = async () => {
-    if (!confirm("Esto borrará productos duplicados (ignorando tildes y espacios) y cualquier producto de TEST. ¿Continuar?")) return;
+    if (!confirm("Esto hará una limpieza profunda. Se borrarán productos con nombres casi idénticos. ¿Continuar?")) return;
     setCleaning(true);
     try {
       const { data: allProducts, error } = await supabase
@@ -33,25 +33,26 @@ export default function AdminDashboard() {
       const seen = new Set();
       const toDelete: string[] = [];
 
-      // Función para normalizar texto (quitar tildes, etc)
-      const normalize = (text: string) => 
-        text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      // Normalización ultra-agresiva: sin espacios, sin tildes, todo minúscula
+      const superNormalize = (text: string) => 
+        text.normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/gi, '')
+            .toLowerCase();
 
       allProducts?.forEach(p => {
-        const nameNorm = normalize(p.name);
-        const brandNorm = normalize(p.brand || "");
-        const key = `${nameNorm}-${brandNorm}`;
-
-        // Caso especial: Borrar cualquier cosa que diga TEST
+        const nameNorm = superNormalize(p.name);
+        
+        // Caso especial: TEST
         if (nameNorm.includes("test")) {
           toDelete.push(p.id);
           return;
         }
 
-        if (seen.has(key)) {
+        if (seen.has(nameNorm)) {
           toDelete.push(p.id);
         } else {
-          seen.add(key);
+          seen.add(nameNorm);
         }
       });
 
@@ -62,10 +63,10 @@ export default function AdminDashboard() {
           .in('id', toDelete);
 
         if (delError) throw delError;
-        toast.success(`¡Limpieza exitosa! Se borraron ${toDelete.length} productos.`);
+        toast.success(`¡Limpieza profunda exitosa! Se borraron ${toDelete.length} duplicados.`);
         window.location.reload();
       } else {
-        toast.info("No se encontraron productos duplicados con este criterio.");
+        toast.info("No se encontraron más duplicados.");
       }
     } catch (err: any) {
       toast.error("Error al limpiar: " + err.message);

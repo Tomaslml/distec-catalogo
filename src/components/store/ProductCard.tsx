@@ -78,7 +78,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <img
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 p-2"
                 loading="lazy"
               />
             ) : (
@@ -158,7 +158,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <img
                 src={product.imageUrl}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain p-4"
                 loading="lazy"
               />
             ) : (
