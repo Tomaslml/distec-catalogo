@@ -13,7 +13,6 @@ import AdminProducts from "./pages/admin/Products";
 import ProductForm from "./pages/admin/ProductForm";
 import AdminOrders from "./pages/admin/Orders";
 import AdminSettings from "./pages/admin/Settings";
-import Migration from "./pages/admin/Migration";
 import NotFound from "./pages/NotFound";
 import PageTracker from "./components/PageTracker";
 
@@ -44,7 +43,6 @@ const App = () => (
                 <Route path="products/edit/:id" element={<ProductForm />} />
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="settings" element={<AdminSettings />} />
-                <Route path="migration" element={<Migration />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

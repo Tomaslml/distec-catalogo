@@ -9,7 +9,6 @@ const links = [
   { to: "/admin/products/new", icon: PlusCircle, label: "Agregar producto" },
   { to: "/admin/orders", icon: ClipboardList, label: "Pedidos" },
   { to: "/admin/settings", icon: Settings, label: "Configuración" },
-  { to: "/admin/migration", icon: RefreshCw, label: "Migrar Imágenes" },
 ];
 
 const AdminLayout = () => {
