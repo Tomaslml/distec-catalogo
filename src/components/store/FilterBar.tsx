@@ -56,10 +56,10 @@ export default function FilterBar({
     finally { setLoadingBrands(false); }
   };
 
-  // Marcas a mostrar en el dropdown
+  // Marcas a mostrar en el dropdown (optimizadas para no repetir)
   const brands = allBrands.length > 0
     ? allBrands
-    : [...new Set(products.map((p) => p.brand))].sort();
+    : Array.from(new Set(products.map((p) => p.brand).filter(Boolean))).sort();
 
   // Filtrado principal
   useEffect(() => {
@@ -133,7 +133,7 @@ export default function FilterBar({
     (debouncedSearch.trim() ? 1 : 0);
 
   return (
-    <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-sm border-b border-border py-4">
+    <div className="sticky top-16 md:top-20 z-40 bg-background/95 backdrop-blur-sm border-b border-border py-4">
       <div className="container mx-auto px-4 space-y-4">
         <div className="flex flex-wrap items-center gap-3 pb-1">
 

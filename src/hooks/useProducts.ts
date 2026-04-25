@@ -69,9 +69,14 @@ export function useProducts() {
       });
 
       setProducts(prev => {
-        const combined = [...prev, ...allNewProducts].sort((a, b) => a.sortOrder - b.sortOrder);
-        saveCache(combined);
-        return combined;
+        // De-duplicate using Map to ensure unique IDs
+        const combined = [...prev, ...allNewProducts];
+        const uniqueMap = new Map();
+        combined.forEach(p => uniqueMap.set(p.id, p));
+        const unique = Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+        
+        saveCache(unique);
+        return unique;
       });
 
       allLoadedRef.current = true;
@@ -118,11 +123,11 @@ export function useProducts() {
           const formatted = formatSupabaseProducts(firstPageRes.data);
           
           setProducts(prev => {
-            if (hasCachedData) {
-               const otherProducts = prev.filter(p => !formatted.some(f => f.id === p.id));
-               return [...formatted, ...otherProducts].sort((a, b) => a.sortOrder - b.sortOrder);
-            }
-            return formatted;
+            const current = hasCachedData ? prev : [];
+            const combined = [...formatted, ...current];
+            const uniqueMap = new Map();
+            combined.forEach(p => uniqueMap.set(p.id, p));
+            return Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
           });
           
           if (!hasCachedData) saveCache(formatted);
