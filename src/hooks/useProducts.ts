@@ -25,6 +25,24 @@ function saveCache(products: Product[]) {
   }
 }
 
+// Deduplica productos por nombre (caso insensible, sin tildes ni espacios extras).
+// Mantiene el que tiene el sort_order más bajo (el "original").
+function deduplicateByName(products: Product[]): Product[] {
+  const seen = new Map<string, Product>();
+  for (const p of products) {
+    const key = p.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+    if (!seen.has(key)) {
+      seen.set(key, p);
+    }
+  }
+  return Array.from(seen.values());
+}
+
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,11 +87,11 @@ export function useProducts() {
       });
 
       setProducts(prev => {
-        // De-duplicate using Map to ensure unique IDs
         const combined = [...prev, ...allNewProducts];
         const uniqueMap = new Map();
         combined.forEach(p => uniqueMap.set(p.id, p));
-        const unique = Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+        const uniqueById = Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+        const unique = deduplicateByName(uniqueById);
         
         saveCache(unique);
         return unique;
@@ -91,13 +109,21 @@ export function useProducts() {
     const init = async () => {
       let hasCachedData = false;
       
+      // Limpiar caché corrupta con duplicados (one-time fix)
+      const CACHE_VERSION_KEY = "distec_cache_v";
+      const CURRENT_VERSION = "2";
+      if (localStorage.getItem(CACHE_VERSION_KEY) !== CURRENT_VERSION) {
+        localStorage.removeItem(CACHE_KEY);
+        localStorage.setItem(CACHE_VERSION_KEY, CURRENT_VERSION);
+      }
+
       // 1. Mostrar caché inmediatamente
       try {
         const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setProducts(parsed);
+            setProducts(deduplicateByName(parsed));
             setLoading(false);
             hasCachedData = true;
           }
@@ -127,7 +153,8 @@ export function useProducts() {
             const combined = [...formatted, ...current];
             const uniqueMap = new Map();
             combined.forEach(p => uniqueMap.set(p.id, p));
-            return Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+            const uniqueById = Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
+            return deduplicateByName(uniqueById);
           });
           
           if (!hasCachedData) saveCache(formatted);
