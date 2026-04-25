@@ -52,7 +52,7 @@ export function useProducts() {
   const allLoadedRef = useRef(false);
 
   // Carga TODO en batches PARALELOS (mucho más rápido que secuencial)
-  const fetchAllInBatches = useCallback(async (totalCount: number) => {
+  const fetchAllInBatches = useCallback(async (totalCount: number, firstPageIds: Set<string>) => {
     if (allLoadedRef.current) return;
 
     // Calculamos los rangos de todos los batches que faltan (empezando desde el primer batch cargado)
@@ -80,16 +80,24 @@ export function useProducts() {
       const results = await Promise.all(promises);
       
       const allNewProducts: Product[] = [];
+      const loadedIds = new Set(firstPageIds);
+      
       results.forEach(res => {
         if (res.data) {
-          allNewProducts.push(...formatSupabaseProducts(res.data));
+          const formatted = formatSupabaseProducts(res.data);
+          formatted.forEach(p => loadedIds.add(p.id));
+          allNewProducts.push(...formatted);
         }
       });
 
       setProducts(prev => {
         const combined = [...prev, ...allNewProducts];
+        
+        // Remove items that are in cache but no longer in the DB
+        const validItems = combined.filter(p => loadedIds.has(p.id));
+
         const uniqueMap = new Map();
-        combined.forEach(p => uniqueMap.set(p.id, p));
+        validItems.forEach(p => uniqueMap.set(p.id, p));
         const uniqueById = Array.from(uniqueMap.values()).sort((a, b) => a.sortOrder - b.sortOrder);
         const unique = deduplicateByName(uniqueById);
         
@@ -163,8 +171,13 @@ export function useProducts() {
           // 3. Si hay más productos, cargarlos todos en batches paralelos
           const totalCount = countRes.count || 0;
           if (totalCount > PAGE_SIZE) {
-            fetchAllInBatches(totalCount);
+            const firstPageIds = new Set(formatted.map(p => p.id));
+            fetchAllInBatches(totalCount, firstPageIds);
           } else {
+            const uniqueById = formatted.sort((a, b) => a.sortOrder - b.sortOrder);
+            const finalProducts = deduplicateByName(uniqueById);
+            setProducts(finalProducts);
+            saveCache(finalProducts);
             allLoadedRef.current = true;
             setHasMore(false);
           }
@@ -220,7 +233,11 @@ export function useProducts() {
     if (error) throw error;
     if (result) {
       const formatted = formatSupabaseProducts(result)[0];
-      setProducts(prev => [...prev, formatted]);
+      setProducts(prev => {
+        const next = [...prev, formatted];
+        saveCache(next);
+        return next;
+      });
     }
   };
 
@@ -235,7 +252,11 @@ export function useProducts() {
     const { error } = await supabase.from("products").update(dbData).eq("id", id);
     if (error) throw error;
     
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+    setProducts(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, ...data } : p);
+      saveCache(next);
+      return next;
+    });
   };
 
   const updateProductOrder = async (orderedIds: { id: string; sort_order: number }[]) => {
@@ -260,14 +281,33 @@ export function useProducts() {
           newProducts[index] = { ...newProducts[index], sortOrder: update.sort_order };
         }
       });
-      return newProducts.sort((a, b) => a.sortOrder - b.sortOrder);
+      const sorted = newProducts.sort((a, b) => a.sortOrder - b.sortOrder);
+      saveCache(sorted);
+      return sorted;
     });
   };
 
   const deleteProduct = async (id: string) => {
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    // Usamos .select() para verificar si realmente se borró algo
+    const { data, error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id)
+      .select();
+    
     if (error) throw error;
-    setProducts(prev => prev.filter(p => p.id !== id));
+    
+    if (!data || data.length === 0) {
+      throw new Error(
+        "El producto no se pudo borrar. Revisá los permisos (RLS) de la tabla 'products' en Supabase → Authentication → Policies. Necesitás una política DELETE para usuarios autenticados."
+      );
+    }
+    
+    setProducts(prev => {
+      const filtered = prev.filter(p => p.id !== id);
+      saveCache(filtered);
+      return filtered;
+    });
   };
 
   return { 
